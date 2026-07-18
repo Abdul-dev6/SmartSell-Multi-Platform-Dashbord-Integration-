@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FaCheckCircle, FaLock, FaShieldAlt } from "react-icons/fa";
 import { SiVisa, SiMastercard } from "react-icons/si";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 const Paymentform = () => {
   const router = useRouter();
@@ -330,4 +331,10 @@ const Paymentform = () => {
   );
 };
 
-export default Paymentform;
+export default function PaymentFormPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Paymentform />
+    </Suspense>
+  );
+}
