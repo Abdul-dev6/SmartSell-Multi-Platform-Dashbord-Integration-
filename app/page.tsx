@@ -1,21 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import Link from "next/link";
-function useReveal(threshold = 0.2) {
-  const ref = useRef(null);
+function useReveal(
+  threshold = 0.2,
+): [RefObject<HTMLDivElement | null>, boolean] {
+  const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
+      "(prefers-reduced-motion: reduce)"
     ).matches;
+
     if (prefersReduced) {
       setVisible(true);
       return;
     }
+
     const node = ref.current;
     if (!node) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -23,9 +29,11 @@ function useReveal(threshold = 0.2) {
           observer.unobserve(node);
         }
       },
-      { threshold },
+      { threshold }
     );
+
     observer.observe(node);
+
     return () => observer.disconnect();
   }, [threshold]);
 
