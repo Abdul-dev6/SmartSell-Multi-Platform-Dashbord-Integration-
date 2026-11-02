@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
+
 function Integrationcard(props) {
   const handleClick = () => {
     if (props.onConnect) {
@@ -18,7 +20,7 @@ function Integrationcard(props) {
         {/* logo section */}
         <div className="flex w-24 h-24 items-center justify-center mt-10 z-10">
           <div className="bg-white p-3 rounded-full shadow-lg border border-gray-100">
-            <img src={props.img} alt="" className="w-16 h-16 object-contain" />
+            <Image src={props.img} alt="" width={64} height={64} className="w-16 h-16 object-contain" />
           </div>
         </div>
 

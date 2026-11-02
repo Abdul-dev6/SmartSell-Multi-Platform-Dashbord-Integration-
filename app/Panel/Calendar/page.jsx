@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import LoadState from "@/PanelComponents/LoadState";
+import useApiData from "@/PanelComponents/useApiData";
 
 /* ── constants ── */
 const MONTHS = [
@@ -130,7 +132,7 @@ function TimeRow({ h, mi, ap, setH, setMi, setAp }) {
 
 /* ── Modal ── */
 function Modal({ prefillDate, onSave, onClose }) {
-  const now = new Date();
+  const [saving, setSaving] = useState(false);
   const base = prefillDate || todayStr();
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
@@ -150,19 +152,25 @@ function Modal({ prefillDate, onSave, onClose }) {
   const [eMi, setEMi] = useState("00");
   const [eAp, setEAp] = useState("AM");
 
-  function save() {
+  async function save() {
     if (!title.trim()) {
       setErr("Title is required.");
       return;
     }
-    onSave({
+    setSaving(true);
+    const error = await onSave({
       date: toStr(sY, sM, sD),
       endDate: toStr(eY, eM, eD),
       time: `${sH}:${sMi} ${sAp} – ${eH}:${eMi} ${eAp}`,
       title: title.trim(),
-      desc: desc.trim() || "—",
+      description: desc.trim(),
       color,
     });
+    setSaving(false);
+    if (error) {
+      setErr(error);
+      return;
+    }
     onClose();
   }
 
@@ -310,10 +318,12 @@ function Modal({ prefillDate, onSave, onClose }) {
               Cancel
             </button>
             <button
+              type="button"
               onClick={save}
-              className="px-6 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-600 cursor-pointer shadow-md"
+              disabled={saving}
+              className="px-6 py-2 rounded-xl bg-indigo-500 text-white text-sm font-bold hover:bg-indigo-600 cursor-pointer shadow-md disabled:opacity-50"
             >
-              Save Event
+              {saving ? "Saving…" : "Save Event"}
             </button>
           </div>
         </div>
@@ -331,31 +341,9 @@ export default function UpcomingEvents() {
   const [viewMonth, setViewMonth] = useState(now.getMonth());
   const [modal, setModal] = useState(false);
   const [prefill, setPrefill] = useState(null);
-  const [events, setEvents] = useState(() => {
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const d = now.getDate();
-    return [
-      {
-        id: "event-1",
-        date: toStr(y, m, d),
-        endDate: toStr(y, m, d),
-        time: "10:00 AM – 11:00 AM",
-        title: "Today's Standup",
-        desc: "Daily sync call",
-        color: "#6366f1",
-      },
-      {
-        id: "event-2",
-        date: toStr(y, m, Math.min(d + 3, getDaysInMonth(y, m))),
-        endDate: toStr(y, m, Math.min(d + 5, getDaysInMonth(y, m))),
-        time: "02:00 PM – 03:30 PM",
-        title: "Design Review",
-        desc: "Q2 product review",
-        color: "#10b981",
-      },
-    ];
-  });
+  const { body, error: loadError, loading, reload } = useApiData("/api/calendar-events");
+  const events = body?.data || [];
+  const [actionError, setActionError] = useState(null);
 
   /* navigation */
   function prevMonth() {
@@ -379,14 +367,33 @@ export default function UpcomingEvents() {
     setPrefill(date);
     setModal(true);
   }
-  function addEvent(ev) {
-    const newEvent = { ...ev, id: Date.now().toString() };
-    setEvents((prev) =>
-      [...prev, newEvent].sort((a, b) => a.date.localeCompare(b.date)),
-    );
+  // Returns an error message for the modal, or null on success.
+  async function addEvent(ev) {
+    try {
+      const response = await fetch("/api/calendar-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ev),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return data.message || "Could not save the event.";
+      await reload();
+      return null;
+    } catch {
+      return "Could not reach the server.";
+    }
   }
-  function deleteEvent(id) {
-    setEvents((prev) => prev.filter((e) => e.id !== id));
+  async function deleteEvent(event) {
+    if (!window.confirm(`Delete "${event.title}"?`)) return;
+    setActionError(null);
+    try {
+      const response = await fetch(`/api/calendar-events/${event.id}`, { method: "DELETE" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || "Could not delete the event.");
+      await reload();
+    } catch (err) {
+      setActionError(err.message);
+    }
   }
 
   function eventsOn(dateStr) {
@@ -413,6 +420,12 @@ export default function UpcomingEvents() {
 
       {/* page header */}
       <div className="max-w-6xl mx-auto">
+        <LoadState loading={loading && !body} error={loadError} onRetry={reload} />
+        {actionError && (
+          <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-800">
+            {actionError}
+          </p>
+        )}
         <div className="flex items-center justify-between mb-7">
           <div>
             <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">
@@ -588,7 +601,8 @@ export default function UpcomingEvents() {
                       <p className="text-xs text-gray-400">{ev.time}</p>
                     </div>
                     <button
-                      onClick={() => deleteEvent(ev.id)}
+                      onClick={() => deleteEvent(ev)}
+                      aria-label={`Delete ${ev.title}`}
                       className="text-gray-400 hover:text-rose-500 cursor-pointer p-1 transition-colors"
                       title="Delete Event"
                     >

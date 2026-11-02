@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Intergrationcard from "@/PanelComponents/Intergration";
 import { useSearchParams } from "next/navigation";
 
@@ -311,9 +312,11 @@ function IntegrationContent() {
           >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
               <div className="flex items-center gap-3">
-                <img
+                <Image
                   src="/shopify.png"
                   alt="Shopify"
+                  width={32}
+                  height={32}
                   className="w-8 h-8 object-contain"
                 />
                 <h3

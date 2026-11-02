@@ -4,11 +4,10 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaLock, FaShieldAlt } from "react-icons/fa";
 import { SiVisa, SiMastercard } from "react-icons/si";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 const Paymentform = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const plan = {
