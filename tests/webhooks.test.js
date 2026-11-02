@@ -189,7 +189,7 @@ describe("POST /api/shopify/webhooks", () => {
     const res1 = await webhook(delivery({ shop: "unknown.myshopify.com", payload: shopifyProduct(1) }));
     expect(await res1.json()).toMatchObject({ ignored: "unknown_shop" });
     const { shop } = await newStore();
-    const res2 = await webhook(delivery({ shop, topic: "orders/create", payload: { id: 1 } }));
+    const res2 = await webhook(delivery({ shop, topic: "customers/create", payload: { id: 1 } }));
     expect(await res2.json()).toMatchObject({ ignored: "topic" });
     expect(await WebhookEvent.countDocuments()).toBe(0);
   });
@@ -274,6 +274,85 @@ describe("POST /api/shopify/webhooks", () => {
   });
 });
 
+describe("order and inventory webhooks", () => {
+  const order = (overrides = {}) => ({
+    id: 501,
+    name: "#1501",
+    order_number: 1501,
+    created_at: "2026-11-01T10:00:00Z",
+    updated_at: "2026-11-01T10:00:00Z",
+    cancelled_at: null,
+    financial_status: "paid",
+    fulfillment_status: null,
+    total_price: "50.00",
+    current_total_price: "50.00",
+    currency: "USD",
+    note: "leave at the back door",
+    phone: "+15551234567",
+    customer: { first_name: "Ada", last_name: "L", email: "ada@example.com", phone: "+1555", default_address: { address1: "1 Secret St" } },
+    shipping_address: { address1: "1 Secret St" },
+    billing_address: { address1: "1 Secret St" },
+    payment_details: { credit_card_number: "•••• 4242" },
+    line_items: [{ product_id: 1, variant_id: 10, title: "Mug", quantity: 2, price: "25.00", properties: [{ name: "gift note", value: "hi" }] }],
+    ...overrides,
+  });
+
+  it("orders/create stores the order and keeps no addresses or payment details", async () => {
+    const { shop, store } = await newStore();
+    const res = await webhook(delivery({ shop, topic: "orders/create", payload: order() }));
+    expect(await res.json()).toMatchObject({ status: "completed" });
+
+    const Order = (await import("@/models/Order")).default;
+    const saved = await Order.findOne({ shopifyStore: store._id, shopifyOrderId: "501" }).lean();
+    expect(saved).toMatchObject({ name: "#1501", totalPrice: 50, financialStatus: "paid", customer: { name: "Ada L", email: "ada@example.com" } });
+
+    const event = await WebhookEvent.findOne({ topic: "orders/create" }).lean();
+    const stored = JSON.stringify(event.payload);
+    expect(stored).not.toMatch(/Secret St|back door|4242|\+1555|gift note/);
+    expect(event).toMatchObject({ outcome: "created", resourceId: "501" });
+  });
+
+  it("orders/updated applies cancellation; an older update is ignored", async () => {
+    const { shop, store } = await newStore();
+    await webhook(delivery({ shop, topic: "orders/create", payload: order() }));
+    await webhook(delivery({ shop, topic: "orders/updated", payload: order({ updated_at: "2026-11-02T00:00:00Z", cancelled_at: "2026-11-02T00:00:00Z", financial_status: "refunded", current_total_price: "0.00" }) }));
+    await webhook(delivery({ shop, topic: "orders/updated", payload: order({ updated_at: "2026-11-01T12:00:00Z", financial_status: "paid" }) }));
+
+    const Order = (await import("@/models/Order")).default;
+    const saved = await Order.findOne({ shopifyStore: store._id, shopifyOrderId: "501" }).lean();
+    expect(saved.cancelledAt).toBeInstanceOf(Date);
+    expect(saved.financialStatus).toBe("refunded");
+    expect(await Order.countDocuments()).toBe(1);
+  });
+
+  it("inventory_levels/update stores the level linked to its product; untracked stays null; older is ignored", async () => {
+    const { shop, store } = await newStore();
+    await webhook(delivery({ shop, payload: shopifyProduct(1) })); // variant inventory_item_id 100
+    const Inventory = (await import("@/models/Inventory")).default;
+
+    await webhook(delivery({ shop, topic: "inventory_levels/update", payload: { inventory_item_id: 100, location_id: 7, available: 12, updated_at: "2026-11-02T00:00:00Z" } }));
+    let level = await Inventory.findOne({ shopifyStore: store._id, inventoryItemId: "100", locationId: "7" }).lean();
+    expect(level).toMatchObject({ available: 12, productId: "1", variantId: "10" });
+
+    await webhook(delivery({ shop, topic: "inventory_levels/update", payload: { inventory_item_id: 100, location_id: 7, available: 99, updated_at: "2026-11-01T00:00:00Z" } }));
+    level = await Inventory.findOne({ inventoryItemId: "100" }).lean();
+    expect(level.available).toBe(12);
+
+    await webhook(delivery({ shop, topic: "inventory_levels/update", payload: { inventory_item_id: 100, location_id: 7, available: null, updated_at: "2026-11-03T00:00:00Z" } }));
+    expect((await Inventory.findOne({ inventoryItemId: "100" }).lean()).available).toBeNull();
+    expect(await Inventory.countDocuments()).toBe(1);
+
+    const event = await WebhookEvent.findOne({ topic: "inventory_levels/update" }).lean();
+    expect(event.resourceId).toBe("100:7");
+  });
+
+  it("rejects inventory payloads without item or location", async () => {
+    const { shop } = await newStore();
+    const res = await webhook(delivery({ shop, topic: "inventory_levels/update", payload: { available: 1 } }));
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("webhook registration", () => {
   function fakeSubscriptionsClient(initial = []) {
     const subs = [...initial];
@@ -304,9 +383,12 @@ describe("webhook registration", () => {
 
   it("creates one subscription per topic and is idempotent", async () => {
     const client = fakeSubscriptionsClient();
-    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 4, updated: 0, deleted: 0, unchanged: 0 });
-    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 0, updated: 0, deleted: 0, unchanged: 4 });
-    expect(client.subs.map((s) => s.topic).sort()).toEqual(["APP_UNINSTALLED", "PRODUCTS_CREATE", "PRODUCTS_DELETE", "PRODUCTS_UPDATE"]);
+    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 7, updated: 0, deleted: 0, unchanged: 0, failed: [] });
+    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 0, updated: 0, deleted: 0, unchanged: 7, failed: [] });
+    expect(client.subs.map((s) => s.topic).sort()).toEqual([
+      "APP_UNINSTALLED", "INVENTORY_LEVELS_UPDATE", "ORDERS_CREATE", "ORDERS_UPDATED",
+      "PRODUCTS_CREATE", "PRODUCTS_DELETE", "PRODUCTS_UPDATE",
+    ]);
   });
 
   it("moves stale subscriptions to the new URL and removes duplicates", async () => {
@@ -315,8 +397,22 @@ describe("webhook registration", () => {
       { id: "2", topic: "PRODUCTS_UPDATE", uri: "https://older.example.com/api/shopify/webhooks" },
     ]);
     const summary = await ensureWebhookSubscriptions(client, URL_A);
-    expect(summary).toMatchObject({ created: 3, updated: 1, deleted: 1 });
+    expect(summary).toMatchObject({ created: 6, updated: 1, deleted: 1, failed: [] });
     expect(client.subs.filter((s) => s.topic === "PRODUCTS_UPDATE")).toEqual([{ id: "1", topic: "PRODUCTS_UPDATE", uri: URL_A }]);
+  });
+
+  it("a topic Shopify refuses is reported without stopping the others", async () => {
+    const client = fakeSubscriptionsClient();
+    const original = client.post.bind(client);
+    client.post = async (url, body) => {
+      if (body.variables?.topic === "ORDERS_CREATE") {
+        return { data: { data: { webhookSubscriptionCreate: { webhookSubscription: null, userErrors: [{ field: ["topic"], message: "Not approved for protected customer data" }] } } } };
+      }
+      return original(url, body);
+    };
+    const summary = await ensureWebhookSubscriptions(client, URL_A);
+    expect(summary.created).toBe(6);
+    expect(summary.failed).toEqual([{ topic: "orders/create", error: "Not approved for protected customer data" }]);
   });
 
   it("only accepts public HTTPS base URLs", () => {

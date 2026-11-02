@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { getShopifyOAuthConfig } from "@/lib/Shopify/oauth";
 import { listStoresForUser } from "@/lib/Shopify/stores";
-import { getWebhookCallbackUrl } from "@/lib/Shopify/webhookRegistration";
+import { getWebhookCallbackUrl, WEBHOOK_TOPICS } from "@/lib/Shopify/webhookRegistration";
+
+const REQUIRED_TOPICS = Object.values(WEBHOOK_TOPICS);
 
 // Shopify reports only the write scope when both were requested:
 // write_products implies read_products.
@@ -35,12 +37,20 @@ export async function GET(req) {
     const stores = (await listStoresForUser(user._id)).map((store) => {
       const webhooks = store.webhooks || {};
       const pointsHere = Boolean(expectedUrl) && webhooks.callbackUrl === expectedUrl;
+      // Registered before new topics were added (e.g. orders, inventory).
+      const missingTopics = REQUIRED_TOPICS.filter((t) => !(webhooks.topics || []).includes(t));
       return {
         ...store,
         status: store.status || "active",
         missingScopes: missingScopes(requestedScopes, store.scope),
         webhooks: {
-          status: webhooks.status === "active" && !pointsHere ? "elsewhere" : webhooks.status || "not_configured",
+          status:
+            webhooks.status === "active" && !pointsHere
+              ? "elsewhere"
+              : webhooks.status === "active" && missingTopics.length
+                ? "outdated"
+                : webhooks.status || "not_configured",
+          missingTopics,
           registeredHost: webhooks.callbackUrl ? new URL(webhooks.callbackUrl).host : null,
           lastError: webhooks.lastError || null,
           registeredAt: webhooks.registeredAt || null,

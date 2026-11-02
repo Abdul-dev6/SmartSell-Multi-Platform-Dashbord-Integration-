@@ -76,7 +76,7 @@ const shopSchema = new mongoose.Schema(
     webhooks: {
       status: {
         type: String,
-        enum: ["active", "not_configured", "failed", "inactive"],
+        enum: ["active", "partial", "not_configured", "failed", "inactive"],
       },
       callbackUrl: String,
       topics: [String],

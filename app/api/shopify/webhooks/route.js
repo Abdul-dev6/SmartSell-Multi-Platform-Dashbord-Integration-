@@ -64,7 +64,11 @@ export async function POST(req) {
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
-  if (!payload || typeof payload !== "object" || (topic.startsWith("products/") && !payload.id)) {
+  const missingId =
+    topic === "inventory_levels/update"
+      ? !payload?.inventory_item_id || !payload?.location_id
+      : /^(products|orders)\//.test(topic) && !payload?.id;
+  if (!payload || typeof payload !== "object" || missingId) {
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
   }
 
