@@ -312,6 +312,10 @@ function IntegrationContent() {
                             Live updates from Shopify:{" "}
                             {store.webhooks?.status === "active" ? (
                               <span className="text-emerald-700">On</span>
+                            ) : store.webhooks?.status === "elsewhere" ? (
+                              <span className="text-amber-700">
+                                Off here (sending to {store.webhooks.registeredHost}). Click “Set up live updates”.
+                              </span>
                             ) : (
                               <span className="text-amber-700">
                                 Off{store.webhooks?.lastError ? ` (${store.webhooks.lastError})` : ""}

@@ -270,3 +270,26 @@ describe("authenticated Shopify API routes", () => {
     expect((await Shopifystore.findById(store._id)).status).toBe("active");
   });
 });
+
+describe("live-update status per deployment", () => {
+  it("reports 'elsewhere' when webhooks point to another environment, 'active' when they point here", async () => {
+    const user = await createUser();
+    const store = await linkStore({ userId: user._id, shop: SHOP, accessToken: "tok", scope: "read_products" });
+    await Shopifystore.updateOne({ _id: store._id }, {
+      $set: { webhooks: { status: "active", callbackUrl: "https://old-tunnel.trycloudflare.com/api/shopify/webhooks" } },
+    });
+
+    const original = process.env.SHOPIFY_WEBHOOK_BASE_URL;
+    try {
+      process.env.SHOPIFY_WEBHOOK_BASE_URL = "https://prod.example.com";
+      let body = await (await status(request(`${BASE}/api/shopify/status`, [sessionCookieFor(user)]))).json();
+      expect(body.stores[0].webhooks).toMatchObject({ status: "elsewhere", registeredHost: "old-tunnel.trycloudflare.com" });
+
+      await Shopifystore.updateOne({ _id: store._id }, { $set: { "webhooks.callbackUrl": "https://prod.example.com/api/shopify/webhooks" } });
+      body = await (await status(request(`${BASE}/api/shopify/status`, [sessionCookieFor(user)]))).json();
+      expect(body.stores[0].webhooks.status).toBe("active");
+    } finally {
+      process.env.SHOPIFY_WEBHOOK_BASE_URL = original ?? "";
+    }
+  });
+});
