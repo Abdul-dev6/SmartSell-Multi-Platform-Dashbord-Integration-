@@ -5,12 +5,17 @@ import { UserContext } from "@/UseContext";
 
 import Sidebar from "@/PanelComponents/Sidebar";
 import Navbar from "@/PanelComponents/Navbar";
+import useApiData from "@/PanelComponents/useApiData";
 
 export default function PanelLayout({ children }) {
   const [bar, setbar] = useState(true);
   const [setting, setSetting] = useState(false);
+  // Loaded once for the whole panel (name/email shown in the navbar and sidebar).
+  const { body: me } = useApiData("/api/auth/me");
+  const currentUser = me?.user || null;
+
   return (
-    <UserContext.Provider value={{ bar, setbar, setting, setSetting }}>
+    <UserContext.Provider value={{ bar, setbar, setting, setSetting, currentUser }}>
       <div className="min-h-screen w-full overflow-x-hidden bg-slate-50">
         <div className="min-h-screen">
           <Sidebar />

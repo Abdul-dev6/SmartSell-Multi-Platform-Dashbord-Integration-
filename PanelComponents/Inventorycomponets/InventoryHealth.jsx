@@ -1,10 +1,27 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { health } from "./InventoryData";
-import { ShieldCheck, TrendingUp } from "lucide-react";
+import { ShieldCheck, ShieldAlert } from "lucide-react";
 
-export default function InventoryHealth() {
+// Share of stock-tracked inventory rows (variant × location) that are in
+// stock. Untracked items are excluded rather than counted as in or out.
+export function inventoryHealth(inventorydata = []) {
+  const tracked = inventorydata.filter((item) => typeof item.available === "number");
+  const inStock = tracked.filter((item) => item.available > 0).length;
+  return {
+    tracked: tracked.length,
+    inStock,
+    outOfStock: tracked.length - inStock,
+    percentage: tracked.length ? Math.round((inStock / tracked.length) * 100) : null,
+  };
+}
+
+export default function InventoryHealth({ inventorydata = [] }) {
+  const { tracked, inStock, outOfStock, percentage } = inventoryHealth(inventorydata);
+  const good = percentage !== null && percentage >= 80;
+  const Icon = good ? ShieldCheck : ShieldAlert;
+  const tone = percentage === null ? "text-slate-400" : good ? "text-green-600" : percentage >= 50 ? "text-amber-600" : "text-red-600";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -19,30 +36,37 @@ export default function InventoryHealth() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
         <div>
           <div className="flex items-center gap-2">
-            <ShieldCheck className="text-green-600" size={24} />
+            <Icon className={tone} size={24} aria-hidden="true" />
 
             <h2 className="text-2xl font-bold text-slate-800">
-              {health.title}
+              Inventory Health
             </h2>
           </div>
 
-          <p className="text-slate-500 mt-3">{health.description}</p>
+          <p className="text-slate-500 mt-3">
+            {percentage === null
+              ? "No stock-tracked items yet."
+              : `${inStock} of ${tracked} stock-tracked items are in stock${outOfStock ? `; ${outOfStock} out of stock` : ""}.`}
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <TrendingUp className="text-green-600" size={22} />
-
-          <span className="text-3xl font-bold text-green-600">
-            {health.percentage}%
-          </span>
-        </div>
+        <span className={`text-3xl font-bold ${tone}`}>
+          {percentage === null ? "—" : `${percentage}%`}
+        </span>
       </div>
 
       <div className="mt-8">
-        <div className="w-full bg-slate-200 rounded-full h-4 overflow-hidden">
+        <div
+          className="w-full bg-slate-200 rounded-full h-4 overflow-hidden"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percentage ?? undefined}
+          aria-label="Share of stock-tracked items in stock"
+        >
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${health.percentage}%` }}
+            animate={{ width: `${percentage ?? 0}%` }}
             transition={{
               duration: 1.2,
               ease: "easeOut",
@@ -52,9 +76,9 @@ export default function InventoryHealth() {
         </div>
 
         <div className="flex justify-between mt-3 text-sm text-slate-500">
-          <span>Poor</span>
-          <span>Average</span>
-          <span>Excellent</span>
+          <span>0%</span>
+          <span>50%</span>
+          <span>100% in stock</span>
         </div>
       </div>
     </motion.div>

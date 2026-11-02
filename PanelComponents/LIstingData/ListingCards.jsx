@@ -13,36 +13,21 @@ const bgMap = [
 ];
 
 export default function ListingCards({ ListingData = [] }) {
-  const totalListings = ListingData.length;
-  const activeListings = ListingData.filter(
-    (item) => item.status === "active",
-  ).length;
-  const draftListings = ListingData.filter(
-    (item) => item.status === "draft",
-  ).length;
-  const archivedListings = ListingData.filter(
-    (item) => item.status === "archived",
-  ).length;
-  
-  const inactiveListings = ListingData.filter(
-    (item) => item.status === "inactive",
-  ).length;
-  const pendingListings = ListingData.filter(
-    (item) => item.status === "pending",
-  ).length;
+  // Rows are one per variant per location; count each product once.
+  const products = [...new Map(ListingData.map((item) => [item.product_id, item])).values()];
+  const countStatus = (status) => products.filter((item) => item.status === status).length;
 
+  // No history is stored yet, so no period-over-period change is shown.
   const listingStats = [
-    { id: 1, title: "Total Listings", value: totalListings, change: "+10%", description: "From last month" },
-    { id: 2, title: "Draft Listings", value: draftListings, change: "+5%", description: "From last month" },
-    { id: 3, title: "Active Listings", value: activeListings, change: "+5%", description: "From last month" },
-    { id: 4, title: "Archived Listings", value: archivedListings, change: "+15%", description: "From last month" },
-    
-  ];  
+    { id: 1, title: "Total Products", value: products.length },
+    { id: 2, title: "Draft", value: countStatus("draft") },
+    { id: 3, title: "Active", value: countStatus("active") },
+    { id: 4, title: "Archived", value: countStatus("archived") },
+  ];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mt-8">
       {listingStats.map((item, index) => {
         const Icon = iconMap[index] ?? LayoutGrid;
-        const isPositive = item.change.startsWith("+");
         return (
           <motion.div
             key={item.id}
@@ -65,15 +50,7 @@ export default function ListingCards({ ListingData = [] }) {
               <h2 className="text-3xl font-bold text-slate-900 mt-1">
                 {item.value}
               </h2>
-              <p
-                className={`text-xs font-semibold mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${
-                  isPositive
-                    ? "text-emerald-700 bg-emerald-50"
-                    : "text-red-600 bg-red-50"
-                }`}
-              >
-                {item.change} vs last month
-              </p>
+              <p className="text-xs text-slate-400 mt-2">Products</p>
             </div>
           </motion.div>
         );

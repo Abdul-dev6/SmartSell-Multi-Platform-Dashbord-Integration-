@@ -3,8 +3,15 @@ import React from "react";
 import { RainfallBar } from "@/PanelComponents/Rainfallbar";
 import { SalesLineChart } from "@/PanelComponents/SalesLineChart";
 import Piechart from "@/PanelComponents/Piechart";
+import LoadState from "@/PanelComponents/LoadState";
+import useApiData from "@/PanelComponents/useApiData";
 
 function Reports() {
+  const { body, error, loading, reload } = useApiData("/api/dashboard/summary");
+  const summary = body?.data;
+  const monthly = summary?.monthly || [];
+  const currency = summary?.currency;
+
   return (
     <div className="bg-slate-50 w-full min-h-screen px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
 
@@ -17,22 +24,35 @@ function Reports() {
           Analytics & Reports
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm text-blue-100/70">
-          Track performance, revenue trends, and monthly profit breakdowns.
+          Orders, revenue and order value from your synced Shopify data
+          {summary?.timezone ? ` (${summary.timezone})` : ""}.
         </p>
       </div>
 
-      {/* ── Full-width Rainfall / Yearly Overview Chart ── */}
+      <LoadState loading={loading && !summary} error={error} onRetry={reload} />
+
+      {summary && !summary.hasStore && (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Connect a Shopify store on the Integrations page to see reports.
+        </p>
+      )}
+
+      {summary?.definitions?.revenue && (
+        <p className="text-xs text-slate-500">{summary.definitions.revenue}</p>
+      )}
+
+      {/* ── Full-width Yearly Overview Chart ── */}
       <div className="w-full">
-        <RainfallBar />
+        <RainfallBar data={monthly} currency={currency} year={summary?.year} />
       </div>
 
       {/* ── Line Chart + Pie Chart ── */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-8">
-          <SalesLineChart />
+          <SalesLineChart data={monthly} currency={currency} />
         </div>
         <div className="xl:col-span-4">
-          <Piechart />
+          <Piechart chartData={monthly} currency={currency} />
         </div>
       </div>
     </div>

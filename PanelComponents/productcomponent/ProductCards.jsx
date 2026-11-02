@@ -11,34 +11,20 @@ const bgMap = [
   "bg-amber-500 shadow-amber-200",
   "bg-red-500 shadow-red-200",
 ];
-const changeColorMap = [
-  "text-emerald-600 bg-emerald-50",
-  "text-emerald-600 bg-emerald-50",
-  "text-amber-600 bg-amber-50",
-  "text-red-600 bg-red-50",
-];
 
 export default function ProductStats({ ProductData = [] }) {
 
-  const totalListings = ProductData.length;
-  const activeListings = ProductData.filter(
-    (item) => item.status === "active",
-  ).length;
-  const draftListings = ProductData.filter(
-    (item) => item.status === "draft",
-  ).length;
-  const archivedListings = ProductData.filter(
-    (item) => item.status === "archived",
-  ).length;
-  
+  // Rows are one per variant per location; count each product once.
+  const products = [...new Map(ProductData.map((item) => [item.product_id, item])).values()];
+  const countStatus = (status) => products.filter((item) => item.status === status).length;
 
+  // No history is stored yet, so no period-over-period change is shown.
   const listingStats = [
-    { id: 1, title: "Total Listings", value: totalListings, change: "+10%", description: "From last month" },
-    { id: 2, title: "Draft Listings", value: draftListings, change: "+5%", description: "From last month" },
-    { id: 3, title: "Active Listings", value: activeListings, change: "+5%", description: "From last month" },
-    { id: 4, title: "Archived Listings", value: archivedListings, change: "+15%", description: "From last month" },
-    
-  ];  
+    { id: 1, title: "Total Products", value: products.length },
+    { id: 2, title: "Draft", value: countStatus("draft") },
+    { id: 3, title: "Active", value: countStatus("active") },
+    { id: 4, title: "Archived", value: countStatus("archived") },
+  ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mt-8">
@@ -64,7 +50,7 @@ export default function ProductStats({ ProductData = [] }) {
 
             <div>
               <h2 className="text-3xl font-bold text-slate-900">{item.value}</h2>
-              <p className="text-xs text-slate-400 mt-1">Total count</p>
+              <p className="text-xs text-slate-400 mt-1">Products</p>
             </div>
           </motion.div>
         );

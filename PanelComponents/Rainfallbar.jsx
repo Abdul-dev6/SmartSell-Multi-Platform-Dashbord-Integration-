@@ -1,22 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { formatMoney } from "./format";
 
-const data = [
-  { month: "Jan", rainfall: 30, profit: 1200 },
-  { month: "Feb", rainfall: 50, profit: 2400 },
-  { month: "Mar", rainfall: 40, profit: 1800 },
-  { month: "Apr", rainfall: 70, profit: 3200 },
-  { month: "May", rainfall: 60, profit: 2800 },
-  { month: "Jun", rainfall: 80, profit: 3800 },
-  { month: "Jul", rainfall: 90, profit: 4200 },
-  { month: "Aug", rainfall: 25, profit: 5500 },
-  { month: "Sep", rainfall: 45, profit: 3900 },
-  { month: "Oct", rainfall: 65, profit: 3100 },
-  { month: "Nov", rainfall: 85, profit: 2600 },
-  { month: "Dec", rainfall: 55, profit: 4800 },
-];
-
-export function RainfallBar() {
+// Monthly orders and revenue for the year, from /api/dashboard/summary.
+export function RainfallBar({ data = [], currency, year }) {
   const [mounted, setMounted] = useState(false);
   const [hovered, setHovered] = useState(null);
 
@@ -27,8 +14,9 @@ export function RainfallBar() {
   }, []);
 
   // Max values for scaling out of 100%
-  const maxRainfall = Math.max(...data.map((d) => d.rainfall)) * 1.1;
-  const maxProfit = Math.max(...data.map((d) => d.profit)) * 1.1;
+  // `|| 1` keeps bars at 0% (not NaN) when a year has no orders yet.
+  const maxOrders = Math.max(0, ...data.map((d) => d.orders || 0)) * 1.1 || 1;
+  const maxRevenue = Math.max(0, ...data.map((d) => d.revenue || 0)) * 1.1 || 1;
 
   return (
     <div className="w-full h-full p-10 lg:p-[4%] border border-slate-200/80 rounded-[1.5rem] shadow-xl relative overflow-hidden group/card transition-all duration-500 hover:shadow-[0_10px_40px_-10px_rgba(16,185,129,0.3)]">
@@ -42,10 +30,10 @@ export function RainfallBar() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-2">
           <div>
             <h2 className="text-xl font-semibold text-slate-700 tracking-tight drop-shadow-sm">
-              Yearly Overview
+              Yearly Overview{year ? ` ${year}` : ""}
             </h2>
             <p className="text-[10px] font-semibold text-gray-500 mt-1 tracking-wide uppercase">
-              Rainfall vs. Profit
+              Orders vs. Revenue
             </p>
           </div>
 
@@ -54,13 +42,13 @@ export function RainfallBar() {
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]"></span>
               <span className="text-[10px] font-bold text-gray-500">
-                Rainfall
+                Orders
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
               <span className="text-[10px] font-bold text-gray-500">
-                Profit
+                Revenue
               </span>
             </div>
           </div>
@@ -95,23 +83,23 @@ export function RainfallBar() {
                     {item.month}
                   </p>
                   <p className="text-blue-400 text-[9px] font-bold tracking-wide">
-                    Rain: <span className="text-white">{item.rainfall}mm</span>
+                    Orders: <span className="text-white">{item.orders || 0}</span>
                   </p>
                   <p className="text-emerald-400 text-[9px] font-bold tracking-wide">
-                    Profit:{" "}
+                    Revenue:{" "}
                     <span className="text-white">
-                      ${item.profit.toLocaleString()}
+                      {formatMoney(item.revenue || 0, currency)}
                     </span>
                   </p>
                 </div>
 
-                {/* Rainfall Bar */}
+                {/* Orders Bar */}
                 <div className="w-1/2 max-w-[20px] h-full flex items-end justify-center group-hover:brightness-110 transition-all">
                   <div
                     className="w-full bg-gradient-to-t from-blue-700 via-blue-500 to-blue-400 rounded-t-lg transition-all duration-[1200ms] ease-out shadow-[0_0_10px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_15px_rgba(59,130,246,0.4)] relative overflow-hidden"
                     style={{
                       height: mounted
-                        ? `${(item.rainfall / maxRainfall) * 100}%`
+                        ? `${((item.orders || 0) / maxOrders) * 100}%`
                         : "0%",
                       transitionDelay: `${index * 100}ms`,
                     }}
@@ -120,13 +108,13 @@ export function RainfallBar() {
                   </div>
                 </div>
 
-                {/* Profit Bar */}
+                {/* Revenue Bar */}
                 <div className="w-1/2 max-w-[20px] h-full flex items-end justify-center group-hover:brightness-110 transition-all">
                   <div
                     className="w-full bg-gradient-to-t from-emerald-700 via-emerald-500 to-emerald-400 rounded-t-lg transition-all duration-[1200ms] ease-out shadow-[0_0_10px_rgba(52,211,153,0.15)] group-hover:shadow-[0_0_15px_rgba(52,211,153,0.4)] relative overflow-hidden"
                     style={{
                       height: mounted
-                        ? `${(item.profit / maxProfit) * 100}%`
+                        ? `${((item.revenue || 0) / maxRevenue) * 100}%`
                         : "0%",
                       transitionDelay: `${index * 100 + 50}ms`,
                     }}

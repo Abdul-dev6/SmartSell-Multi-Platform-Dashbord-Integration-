@@ -110,8 +110,15 @@ describe("create", () => {
   it("concurrent double submit creates one Shopify product", async () => {
     const { user } = await setup();
     const results = await Promise.allSettled([createProduct(user._id, input()), createProduct(user._id, input())]);
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-    expect(results.find((r) => r.status === "rejected").reason).toMatchObject({ status: 409 });
+    // Depending on timing the second request either overlaps (409, in
+    // progress) or arrives after the first finished (200 replay of the same
+    // product). Either way there must be exactly one product.
+    const fulfilled = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+    expect(fulfilled.length).toBeGreaterThanOrEqual(1);
+    expect(new Set(fulfilled.map((r) => String(r.product._id))).size).toBe(1);
+    for (const r of results.filter((r) => r.status === "rejected")) {
+      expect(r.reason).toMatchObject({ status: 409 });
+    }
     expect(shopifyProducts()).toHaveLength(1);
     expect(await Product.countDocuments()).toBe(1);
   });

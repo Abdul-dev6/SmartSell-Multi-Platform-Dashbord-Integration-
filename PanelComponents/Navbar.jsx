@@ -9,7 +9,9 @@ import { UserContext } from "../UseContext";
 function Navbar() {
   const [notification, setNotification] = useState(false);
   const { bar, setbar } = useContext(UserContext);
-  const { setting, setSetting } = useContext(UserContext);
+  const { setting, setSetting, currentUser } = useContext(UserContext);
+  const displayName = currentUser?.name || currentUser?.email || "";
+  const displaySub = currentUser?.name ? currentUser.email : "";
   const [darkMode, setDarkMode] = useState(false);
 
   // Separate refs for each dropdown
@@ -35,29 +37,7 @@ function Navbar() {
     };
   }, [setSetting]);
 
-  const datanotification = [
-    {
-      src: "/user.avif",
-      title: "successful",
-      description: "Your payment of $1,299 was received.",
-      time: "2m ago",
-      unread: true,
-    },
-    {
-      src: "/user.avif",
-      title: "successful",
-      description: "Order #ORD-002 has been shipped.",
-      time: "1h ago",
-      unread: true,
-    },
-    {
-      src: "/user.avif",
-      title: "cancel",
-      description: "Order #ORD-003 was cancelled by the customer.",
-      time: "3h ago",
-      unread: false,
-    },
-  ];
+  const datanotification = [];
 
   const unreadCount = datanotification.filter((n) => n.unread).length;
 
@@ -161,13 +141,13 @@ function Navbar() {
                       </span>
                     )}
                   </div>
-                  <button className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
-                    Mark all read
-                  </button>
                 </div>
 
                 {/* Items */}
                 <div className="max-h-64 overflow-y-auto divide-y divide-slate-50">
+                  {datanotification.length === 0 && (
+                    <p className="px-4 py-6 text-center text-xs text-slate-500">No notifications.</p>
+                  )}
                   {datanotification.map((item, index) => (
                     <div
                       key={index}
@@ -201,12 +181,6 @@ function Navbar() {
                   ))}
                 </div>
 
-                {/* Footer */}
-                <div className="px-4 py-3 border-t border-slate-100">
-                  <button className="w-full text-center text-xs font-medium text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg py-2 transition-all duration-200">
-                    Clear all notifications
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -234,8 +208,8 @@ function Navbar() {
                     style={{ backgroundImage: "url('/user.avif')" }}
                   />
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Alex</p>
-                    <p className="text-xs text-slate-500">Administrator</p>
+                    <p className="text-sm font-semibold text-slate-900 truncate max-w-[10rem]">{displayName}</p>
+                    {displaySub && <p className="text-xs text-slate-500 truncate max-w-[10rem]">{displaySub}</p>}
                   </div>
                 </div>
 
@@ -264,8 +238,8 @@ function Navbar() {
               style={{ backgroundImage: "url('/user.avif')" }}
             />
             <div className="flex flex-col leading-tight">
-              <h1 className="font-semibold text-sm text-slate-900">Alex</h1>
-              <h3 className="text-xs text-slate-500">Administrator</h3>
+              <h1 className="font-semibold text-sm text-slate-900 truncate max-w-[10rem]">{displayName}</h1>
+              {displaySub && <h3 className="text-xs text-slate-500 truncate max-w-[10rem]">{displaySub}</h3>}
             </div>
           </div>
         </div>

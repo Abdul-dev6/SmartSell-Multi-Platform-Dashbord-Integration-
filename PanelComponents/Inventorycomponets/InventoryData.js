@@ -1,10 +1,4 @@
 
-export const health = {
-  percentage: 86,
-  title: "Inventory Health",
-  description:
-    "Great! Your inventory levels are healthy across all connected marketplaces.",
-};
 
 export const marketplaceOptions = [
   "All Marketplaces",

@@ -38,7 +38,7 @@ const Sidebar = () => {
   const { bar, setbar } = useContext(UserContext);
   const [isEcommerceOpen, setIsEcommerceOpen] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
-  const { setting, setSetting } = useContext(UserContext);
+  const { setting, setSetting, currentUser } = useContext(UserContext);
 
   return (
     <div
@@ -184,8 +184,12 @@ const Sidebar = () => {
             style={{ backgroundImage: "url('/user.avif')" }}
           ></div>
           <div className="flex flex-col">
-            <h1 className="font-semibold text-white">Alex</h1>
-            <h3 className="text-slate-400 text-sm">Administrator</h3>
+            <h1 className="font-semibold text-white truncate max-w-[9rem]">
+              {currentUser?.name || currentUser?.email || ""}
+            </h1>
+            {currentUser?.name && (
+              <h3 className="text-slate-400 text-sm truncate max-w-[9rem]">{currentUser.email}</h3>
+            )}
           </div>
         </div>
       )}
