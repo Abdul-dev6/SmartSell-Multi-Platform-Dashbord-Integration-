@@ -20,7 +20,7 @@ export async function GET(req) {
       ? await getInventoryRows(
           user._id,
           stores.map((s) => s._id),
-          new Map(stores.map((s) => [String(s._id), s.shop])),
+          new Map(stores.map((s) => [String(s._id), s])),
         )
       : { rows: [], truncated: false };
     const needsAttention = stores.length

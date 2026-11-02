@@ -27,6 +27,10 @@ export function fakeShopify({
     calls,
     async get(url, { params = {} } = {}) {
       calls.push({ url, params });
+      if (url.startsWith("/locations.json")) {
+        if (fail.locations) throw error(fail.locations);
+        return { data: { locations: [{ id: 7, name: "Main Warehouse", active: true }] }, headers: {} };
+      }
       if (url.startsWith("/shop.json")) {
         if (fail.shop) throw error(fail.shop);
         return { data: { shop }, headers: {} };

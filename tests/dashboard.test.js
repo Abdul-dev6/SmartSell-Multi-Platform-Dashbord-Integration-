@@ -116,6 +116,8 @@ describe("MongoDB-backed routes", () => {
       location_id: "7",
       platform: "Shopify",
       row_id: "10:7",
+      vendor: "Vendor",
+      product_type: "Type",
     });
     expect(JSON.stringify(body)).not.toContain("Product 2");
   });

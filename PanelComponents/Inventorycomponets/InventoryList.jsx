@@ -8,14 +8,14 @@ export default function InventoryList({ inventorydata = [] }) {
     id: item.product_id || item.inventory_item_id,
     name: item.title || "Untitled product",
     marketplace: item.platform || "Shopify",
-    warehouse: item.location_id || "Shopify location",
+    warehouse: item.location_name || item.location_id || "Shopify location",
     reserved: item.reserved ?? 0,
     reorder: item.reorder ?? 0,
     available: item.available ?? null,
     updated: item.updated_at || "Not available",
     image: item.image || "/user.avif",
     sku: item.sku || "Not available",
-    Location: item.location_id || "Not available",
+    Location: item.location_name || item.location_id || "Not available",
   }));
 
   return (

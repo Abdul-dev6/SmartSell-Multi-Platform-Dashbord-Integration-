@@ -77,6 +77,7 @@ describe("syncStore", () => {
 
     const saved = await Shopifystore.findById(store._id).lean();
     expect(saved).toMatchObject({ lastSyncStatus: "success", timezone: "Asia/Karachi", currency: "PKR" });
+    expect(saved.locations).toEqual([{ id: "7", name: "Main Warehouse", active: true }]);
     expect(saved.ordersSyncedThrough).toBeInstanceOf(Date);
     expect(saved.syncLockedUntil).toBeUndefined();
   });
@@ -159,6 +160,12 @@ describe("syncStore", () => {
     expect(saved.lastSyncStatus).toBe("partial");
     expect(saved.lastSyncError).toContain("403");
     expect(saved.ordersSyncedThrough).toBeUndefined();
+  });
+
+  it("a failed locations fetch does not fail the sync", async () => {
+    const { user, store } = await setup();
+    shopify.current = fakeShopify({ products: [shopifyProduct(1)], orders: [], fail: { locations: 403 } });
+    expect((await syncStore(store._id, user._id)).status).toBe("success");
   });
 
   it("marks the sync failed when every phase fails", async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 
 import ProductHeader from "@/PanelComponents/productcomponent/productHeader";
 import ProductCards from "@/PanelComponents/productcomponent/ProductCards";
@@ -10,10 +11,12 @@ import SyncStatus from "@/PanelComponents/SyncStatus";
 import LoadState from "@/PanelComponents/LoadState";
 import useApiData from "@/PanelComponents/useApiData";
 import NeedsAttention from "@/PanelComponents/productcomponent/NeedsAttention";
+import useCatalogFilters from "@/PanelComponents/useCatalogFilters";
 
 export default function ProductsPage() {
   const { body, error, loading, reload } = useApiData("/api/inventory");
-  const ProductData = body?.data || [];
+  const ProductData = useMemo(() => body?.data || [], [body]);
+  const { filters, setFilters, filtered, options } = useCatalogFilters(ProductData);
 
   return (
     <motion.div
@@ -48,9 +51,18 @@ export default function ProductsPage() {
 
       <ProductCards ProductData={ProductData} />
 
-      <SearchFilter ProductData={ProductData} />
+      <SearchFilter
+        filters={filters}
+        setFilters={setFilters}
+        productTypes={options.productTypes}
+        shown={filtered.length}
+        total={ProductData.length}
+      />
 
-      <ProductTable ProductData={ProductData} onChanged={reload} />
+      <ProductTable ProductData={filtered} onChanged={reload} />
+      {ProductData.length > 0 && filtered.length === 0 && (
+        <p className="mt-4 text-sm text-slate-500">No products match your filters.</p>
+      )}
     </motion.div>
   );
 }

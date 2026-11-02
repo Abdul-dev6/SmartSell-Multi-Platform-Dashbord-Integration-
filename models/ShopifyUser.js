@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
 
+// `id` is Shopify's location ID; Mongoose's own id/_id are disabled.
+const LocationSchema = new mongoose.Schema(
+  { id: String, name: String, active: Boolean },
+  { _id: false, id: false },
+);
+
 const shopSchema = new mongoose.Schema(
   {
     user: {
@@ -43,6 +49,8 @@ const shopSchema = new mongoose.Schema(
     // From Shopify's shop settings; used for reporting.
     timezone: String,
     currency: String,
+    // Shopify locations (id → name), so inventory shows names, not IDs.
+    locations: [LocationSchema],
 
     // Synchronization state.
     lastSyncAt: Date,

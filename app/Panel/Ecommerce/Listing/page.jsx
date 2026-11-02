@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+
 import ListingHeader from "@/PanelComponents/LIstingData/ListingHeader";
 import ListingCards from "@/PanelComponents/LIstingData/ListingCards";
 import ListingFilters from "@/PanelComponents/LIstingData/ListingFilter";
@@ -7,10 +9,13 @@ import ListingTable from "@/PanelComponents/LIstingData/ListingTable";
 import SyncStatus from "@/PanelComponents/SyncStatus";
 import LoadState from "@/PanelComponents/LoadState";
 import useApiData from "@/PanelComponents/useApiData";
+import useCatalogFilters from "@/PanelComponents/useCatalogFilters";
+import { CSV_COLUMNS, downloadCsv, exportFilename, toCsv } from "@/PanelComponents/catalogFilters";
 
 export default function ListingPage() {
   const { body, error, loading, reload } = useApiData("/api/inventory");
-  const ListingData = body?.data || [];
+  const ListingData = useMemo(() => body?.data || [], [body]);
+  const { filters, setFilters, filtered, options } = useCatalogFilters(ListingData);
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 overflow-y-auto">
@@ -31,9 +36,20 @@ export default function ListingPage() {
       />
 
       <ListingCards ListingData={ListingData} />
-      <ListingFilters ListingData={ListingData} />
+      <ListingFilters
+        filters={filters}
+        setFilters={setFilters}
+        vendors={options.vendors}
+        productTypes={options.productTypes}
+        shown={filtered.length}
+        total={ListingData.length}
+        onExport={() => downloadCsv(exportFilename("smartsell-listings"), toCsv(filtered, CSV_COLUMNS))}
+      />
 
-      <ListingTable ListingData={ListingData} />
+      <ListingTable ListingData={filtered} />
+      {ListingData.length > 0 && filtered.length === 0 && (
+        <p className="mt-4 text-sm text-slate-500">No listings match your filters.</p>
+      )}
     </div>
   );
 }
