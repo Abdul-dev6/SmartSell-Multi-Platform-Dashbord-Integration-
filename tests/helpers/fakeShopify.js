@@ -206,6 +206,12 @@ export function fakeShopifyStore({ products = [] } = {}) {
       const mode = failure(name);
       if (mode === "timeout") throw Object.assign(new Error("timeout"), { code: "ECONNABORTED" });
       if (mode === "http500") throw httpError(500);
+      if (mode === "errorAfterApply") {
+        // The mutation runs, then a field in the response fails (e.g. an
+        // unsupported argument): Shopify returns errors together with data.
+        const data = apply(name, body.variables);
+        return { data: { errors: [{ message: "using last without before is not supported" }], data: { [name]: { ...data[name], product: null } } } };
+      }
       if (mode === "lostResponse") {
         apply(name, body.variables);
         throw Object.assign(new Error("socket hang up"), { code: "ECONNRESET" });

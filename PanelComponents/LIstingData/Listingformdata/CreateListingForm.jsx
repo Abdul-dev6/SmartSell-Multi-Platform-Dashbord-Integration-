@@ -107,6 +107,29 @@ function newRequestKey() {
     : `k${Date.now()}${Math.random().toString(36).slice(2)}`;
 }
 
+function ImageResults({ results }) {
+  if (!results) return null;
+  return (
+    <div className="mt-2 text-sm" aria-live="polite">
+      {results.uploaded > 0 && (
+        <p className="text-emerald-800">
+          {results.uploaded} image{results.uploaded === 1 ? "" : "s"} uploaded. Shopify may take a moment to process them.
+        </p>
+      )}
+      {results.failed.length > 0 && (
+        <div role="alert" className="text-red-700">
+          <p>Some images could not be uploaded (you can add them from the Edit page):</p>
+          <ul className="list-disc pl-5">
+            {results.failed.map((failure) => (
+              <li key={failure}>{failure}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Create mode posts a new product; edit mode (with `product`) sends only the
 // fields that changed, so untouched Shopify values are never overwritten.
 export default function CreateListingForm({ product = null }) {
@@ -136,10 +159,34 @@ export default function CreateListingForm({ product = null }) {
     return payload;
   };
 
+  // Uploads the queued images one at a time; a failed image does not stop
+  // the others. Returns { uploaded, failed: [message] }.
+  const uploadImages = async (productId) => {
+    const queued = formData.images || [];
+    const results = { uploaded: 0, failed: [] };
+    for (const image of queued) {
+      try {
+        const body = new FormData();
+        body.append("image", image.file, image.file.name);
+        body.append("alt", formData.title || "");
+        const response = await fetch(`/api/products/${productId}/images`, { method: "POST", body });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "Upload failed.");
+        results.uploaded += 1;
+      } catch (error) {
+        results.failed.push(`${image.file.name}: ${error.message}`);
+      }
+    }
+    queued.forEach((image) => URL.revokeObjectURL(image.preview));
+    setFormData((prev) => ({ ...prev, images: [] }));
+    return results;
+  };
+
   const submit = async (statusOverride) => {
     if (loading) return;
     const payload = buildPayload(statusOverride);
-    if (isEdit && !Object.keys(payload).length) {
+    const hasImages = (formData.images || []).length > 0;
+    if (isEdit && !Object.keys(payload).length && !hasImages) {
       setMessage({ type: "info", text: "No changes to save." });
       return;
     }
@@ -148,6 +195,13 @@ export default function CreateListingForm({ product = null }) {
     setErrors({});
     setMessage(null);
     try {
+      // Edit with only new images: nothing to PATCH, just upload them.
+      if (isEdit && !Object.keys(payload).length) {
+        const imageResults = await uploadImages(product.id);
+        setSaved({ product, notSent: [], imageResults });
+        return;
+      }
+
       const response = await fetch(isEdit ? `/api/products/${product.id}` : "/api/products", {
         method: isEdit ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
@@ -156,7 +210,8 @@ export default function CreateListingForm({ product = null }) {
       const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
-        setSaved({ product: data.product, notSent: data.notSent || [] });
+        const imageResults = hasImages ? await uploadImages(data.product.id) : null;
+        setSaved({ product: data.product, notSent: data.notSent || [], imageResults });
         if (isEdit) {
           const fresh = formFromProduct(data.product);
           setBaseline(fresh);
@@ -219,6 +274,7 @@ export default function CreateListingForm({ product = null }) {
             Not sent to Shopify: {saved.notSent.join(", ")}. Set these in Shopify admin.
           </p>
         )}
+        <ImageResults results={saved.imageResults} />
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-medium">
           <Link href="/Panel/Ecommerce/Product" className="rounded-xl bg-emerald-700 px-4 py-2 text-white hover:bg-emerald-800">
             Go to products
@@ -246,7 +302,11 @@ export default function CreateListingForm({ product = null }) {
 
         <GeneralInformation {...sectionProps} />
 
-        <MediaUploader formData={formData} setFormData={setFormData} />
+        <MediaUploader
+          formData={formData}
+          setFormData={setFormData}
+          existingImages={isEdit ? product.images || [] : []}
+        />
 
         <Pricing {...sectionProps} />
 
@@ -263,6 +323,9 @@ export default function CreateListingForm({ product = null }) {
                 Changes saved to Shopify.
                 {saved.notSent.length > 0 && ` Not sent: ${saved.notSent.join(", ")}.`}
               </p>
+            )}
+            {saved && isEdit && !message && saved.imageResults && (
+              <ImageResults results={saved.imageResults} />
             )}
             {message && (
               <p

@@ -144,6 +144,20 @@ describe("create", () => {
     expect((await Product.findById(placeholder._id).lean()).shopifyProductId).toBe(String(shopifyProducts()[0].id));
   });
 
+  it("errors returned with mutation data count as maybe-applied, so no duplicate is created", async () => {
+    const { user } = await setup();
+    shopify.current.state.failNext.productSet = "errorAfterApply";
+
+    await expect(createProduct(user._id, input())).rejects.toMatchObject({ code: "outcome_unknown" });
+    expect(shopifyProducts()).toHaveLength(1);
+    const placeholder = await Product.findOne({ idempotencyKey: KEY }).lean();
+    expect(placeholder.pendingOperation.outcome).toBe("unknown");
+
+    await age(placeholder._id);
+    expect((await createProduct(user._id, input())).replay).toBe(true);
+    expect(shopifyProducts()).toHaveLength(1);
+  });
+
   it("timeout that never reached Shopify: lookup finds nothing, so it is safely resent", async () => {
     const { user } = await setup();
     shopify.current.state.failNext.productSet = "timeout";
