@@ -102,6 +102,13 @@ function IntegrationContent() {
   };
 
   useEffect(() => {
+    // Deferred so the state updates happen outside the effect body.
+    const timer = setTimeout(loadShopifyStatus, 0);
+    // Load once on mount; later refreshes are explicit.
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (!showShopifyModal) return;
     const onKeyDown = (event) => {
       if (event.key === "Escape") setShowShopifyModal(false);
@@ -227,6 +234,56 @@ function IntegrationContent() {
             ✕
           </button>
         </div>
+      )}
+
+      {/* ── Connected stores (always visible) ── */}
+      {activeStores.length > 0 && (
+        <section
+          aria-labelledby="connected-stores-title"
+          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        >
+          <h2 id="connected-stores-title" className="text-base font-semibold text-slate-900">
+            Connected stores
+          </h2>
+          <ul className="mt-3 space-y-3">
+            {activeStores.map((store) => {
+              const live = store.webhooks?.status;
+              const liveText =
+                live === "active"
+                  ? "On"
+                  : live === "outdated" || live === "partial"
+                    ? `Partly on${store.webhooks.missingTopics?.length ? ` (missing: ${store.webhooks.missingTopics.join(", ")})` : ""}`
+                    : live === "elsewhere"
+                      ? `Off here (sending to ${store.webhooks.registeredHost})`
+                      : `Off${store.webhooks?.lastError ? ` (${store.webhooks.lastError})` : ""}`;
+              return (
+                <li key={store._id} className="flex flex-col gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-800 break-all">{store.shop}</p>
+                    <p className={live === "active" ? "text-emerald-700" : "text-amber-700"}>
+                      Live updates from Shopify: {liveText}
+                    </p>
+                    {store.missingScopes?.length > 0 && (
+                      <p className="text-amber-700">
+                        Missing permissions: {store.missingScopes.join(", ")}. Use “Reconnect” in the Shopify panel.
+                      </p>
+                    )}
+                  </div>
+                  {live !== "active" && (
+                    <button
+                      type="button"
+                      onClick={handleRegisterWebhooks}
+                      disabled={registeringWebhooks}
+                      className="shrink-0 rounded-xl bg-slate-900 px-4 py-2 font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+                    >
+                      {registeringWebhooks ? "Setting up…" : "Set up live updates"}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
 
       {/* ── Integration Cards ── */}
