@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useContext } from "react";
-import { FaChartBar, FaRegUser } from "react-icons/fa";
+import { FaChartBar, FaRegUser, FaReceipt } from "react-icons/fa";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { CiCalendar, CiSettings } from "react-icons/ci";
 import { FiShoppingBag } from "react-icons/fi";
@@ -142,6 +142,11 @@ const Sidebar = () => {
 
         {/* Static Links */}
         {[
+          {
+            icon: <FaReceipt className="text-xl shrink-0" />,
+            label: "Expenses",
+            href: "/Panel/Expenses",
+          },
           {
             icon: <FaRegUser className="text-xl shrink-0" />,
             label: "User",
