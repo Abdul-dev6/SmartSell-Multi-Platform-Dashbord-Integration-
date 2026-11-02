@@ -269,19 +269,11 @@ export default function Pricing() {
             one powerful dashboard.
           </p>
 
-          <Link href="/Signup">
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                y: -3,
-              }}
-              whileTap={{
-                scale: 0.95,
-              }}
-              className="mt-10 rounded-xl bg-white px-10 py-4 font-semibold text-indigo-600 shadow-lg transition"
-            >
-              Start Free Trial
-            </motion.button>
+          <Link
+            href="/Signup"
+            className="inline-block mt-10 rounded-xl bg-white px-10 py-4 font-semibold text-indigo-600 shadow-lg transition hover:scale-105"
+          >
+            Start Free Trial
           </Link>
         </div>
       </motion.section>

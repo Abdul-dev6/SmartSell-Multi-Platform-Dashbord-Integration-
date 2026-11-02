@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { makeBinder } from "./bind";
 import { motion } from "framer-motion";
 import { PackageSearch } from "lucide-react";
 
-export default function Inventory() {
-  const [trackInventory, setTrackInventory] = useState(true);
-  const [continueSelling, setContinueSelling] = useState(false);
+export default function Inventory({ formData, setFormData, errors = {} }) {
+  const bind = makeBinder(formData, setFormData, errors);
+  const trackInventory = Boolean(formData?.trackInventory);
+  const continueSelling = Boolean(formData?.continueSelling);
 
   return (
     <motion.div
@@ -39,6 +40,8 @@ export default function Inventory() {
 
           <input
             type="text"
+            {...bind("sku")}
+            aria-label="SKU"
             placeholder="IPHONE16PRO"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />
@@ -51,6 +54,8 @@ export default function Inventory() {
 
           <input
             type="text"
+            {...bind("barcode")}
+            aria-label="Barcode"
             placeholder="1234567890123"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />
@@ -63,10 +68,13 @@ export default function Inventory() {
             Available Quantity
           </label>
 
+          {/* Inventory quantities are read-only in SmartSell; set them in Shopify. */}
           <input
-            type="number"
-            defaultValue={0}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
+            type="text"
+            value="Managed in Shopify"
+            disabled
+            aria-label="Available quantity (managed in Shopify)"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-500"
           />
         </div>
 
@@ -87,8 +95,7 @@ export default function Inventory() {
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={trackInventory}
-            onChange={() => setTrackInventory(!trackInventory)}
+            {...bind("trackInventory", { checkbox: true })}
             className="w-5 h-5"
           />
 
@@ -100,8 +107,7 @@ export default function Inventory() {
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
-            checked={continueSelling}
-            onChange={() => setContinueSelling(!continueSelling)}
+            {...bind("continueSelling", { checkbox: true })}
             className="w-5 h-5"
           />
 

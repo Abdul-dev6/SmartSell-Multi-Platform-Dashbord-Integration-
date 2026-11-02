@@ -1,5 +1,15 @@
+"use client";
+
 import React from "react";
 function Integrationcard(props) {
+  const handleClick = () => {
+    if (props.onConnect) {
+      props.onConnect();
+    } else if (props.buttonurl && props.buttonurl !== "#") {
+      window.location.href = props.buttonurl;
+    }
+  };
+
   return (
     <>
       <div className="flex relative flex-col w-full min-h-[22rem] border border-slate-200 bg-white rounded-2xl items-center shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
@@ -14,7 +24,9 @@ function Integrationcard(props) {
 
         {/* text */}
         <div className="text-center pt-8 px-4 z-10">
-          <h2 className="text-lg font-semibold text-slate-900">{props.title}</h2>
+          <h2 className="text-lg font-semibold text-slate-900">
+            {props.title}
+          </h2>
           <p className="text-slate-500 text-sm mt-2 leading-snug">
             {props.subtitle}
           </p>
@@ -22,9 +34,13 @@ function Integrationcard(props) {
 
         {/* button */}
         <div className="text-center z-10">
-          <button className="mt-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-2 rounded-full shadow-md hover:shadow-xl transition-all duration-300 active:scale-95">
+          <button
+            onClick={handleClick}
+            className="mt-8 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-2 rounded-full shadow-md hover:shadow-xl transition-all duration-300 active:scale-95"
+          >
             Connect
           </button>
+
         </div>
       </div>
     </>

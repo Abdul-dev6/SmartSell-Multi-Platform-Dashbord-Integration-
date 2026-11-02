@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/shopify/webhooks/process",
+      "schedule": "0 4 * * *"
+    }
+  ]
+}

@@ -15,6 +15,42 @@ import {
 
 export default function InventoryRow({ product }) {
   const [openMenu, setOpenMenu] = useState(false);
+ 
+ 
+  function StockavailabilityStatus(available) {
+    // null means Shopify does not track quantity for this item.
+    if (available === null || available === undefined) {
+      return "Not tracked";
+    }
+    if (available <= 0) {
+      return "Out of Stock";
+    }
+    else if (available > 0 && available <= 10) {
+      return "Low Stock";
+      
+    }
+    else {
+      return "In Stock";
+    }
+  }
+
+  function formatUpdatedAt(timestamp) {
+    if (!timestamp || timestamp === "Not available") {
+      return "Not available";
+    }
+
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) {
+      return "Not available";
+    }
+
+    return date.toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
+  
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -185,23 +221,23 @@ export default function InventoryRow({ product }) {
           <p className="text-sm text-slate-500">Available</p>
 
           <h3 className="text-xl font-bold text-green-600">
-            {product.available}
+            {product.available ?? "Not tracked"}
           </h3>
         </div>
 
         <div>
-          <p className="text-sm text-slate-500">Reserved</p>
+          <p className="text-sm text-slate-500">In Stock</p>
 
           <h3 className="text-xl font-bold text-yellow-500">
-            {product.reserved}
+            {StockavailabilityStatus(product.available)=== "In Stock" ? product.available : 0}
           </h3>
         </div>
 
         <div>
-          <p className="text-sm text-slate-500">Reorder Level</p>
+          <p className="text-sm text-slate-500">Out of Stock</p>
 
-          <h3 className="text-xl font-bold text-indigo-600">
-            {product.reorder}
+          <h3 className="text-xl font-bold text-red-500">
+            {StockavailabilityStatus(product.available)=== "Out of Stock" ? "yes" : "no"}
           </h3>
         </div>
 
@@ -227,7 +263,7 @@ export default function InventoryRow({ product }) {
           <p className="text-sm text-slate-500">Last Updated</p>
 
           <h3 className="text-sm font-semibold text-slate-700 mt-2">
-            {product.updated}
+            {formatUpdatedAt(product.updated)}
           </h3>
         </div>
       </div>

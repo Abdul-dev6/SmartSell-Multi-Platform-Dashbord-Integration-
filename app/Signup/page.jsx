@@ -5,6 +5,7 @@ import { FaGithub, FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 const Signup = () => {
   const Router = useRouter();
   const [email, setEmail] = useState("");
@@ -14,17 +15,41 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSignup = (e) => {
-    e.preventDefault();
+  const handleGoogleSignup = () => {
+    signIn("google", {
+      callbackUrl: "/api/auth/google",
+    });
+  };
 
+  const handleSignup = async (e) => {
+    e.preventDefault();
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
 
-    // TODO: Signup API
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
-    Router.push("/Login");
+      const data = await response.json();
+
+      if (response.ok) {
+        Router.push("/Login");
+      } else {
+        alert(data.message || "Signup failed");
+      }
+    } catch {
+      alert("Registration failed. Check your connection and try again.");
+    }
   };
 
   return (
@@ -62,6 +87,8 @@ const Signup = () => {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <motion.button
+            type="button"
+            onClick={handleGoogleSignup}
             whileHover={{ scale: 1.03, y: -3 }}
             whileTap={{ scale: 0.95 }}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-400 bg-white/[0.03] py-3 text-white transition cursor-pointer hover:bg-slate-200/30 hover:border-slate-200"
@@ -105,7 +132,7 @@ const Signup = () => {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-white placeholder:text-slate-600 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
+              className=" w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-slate-900 placeholder:text-slate-600 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
             />
           </motion.div>
           {/* Password */}
@@ -121,7 +148,7 @@ const Signup = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-white placeholder:text-slate-600 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-slate-900 placeholder:text-slate-600 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
               />
 
               <button
@@ -147,7 +174,7 @@ const Signup = () => {
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full  rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5  placeholder:text-slate-600 text-black outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
+                className="w-full  rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5  placeholder:text-slate-600 text-slate-900 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
               />
 
               <button

@@ -1,9 +1,13 @@
 "use client";
 
+import { makeBinder } from "./bind";
+
 import { motion } from "framer-motion";
 import { Package } from "lucide-react";
 
-export default function GeneralInformation() {
+export default function GeneralInformation({ formData, setFormData, errors = {} }) {
+  const bind = makeBinder(formData, setFormData, errors);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 25 }}
@@ -39,6 +43,9 @@ export default function GeneralInformation() {
 
           <input
             type="text"
+            {...bind("title")}
+            aria-label="Product title"
+            required
             placeholder="e.g. iPhone 16 Pro Max"
             className="
               w-full
@@ -65,6 +72,8 @@ export default function GeneralInformation() {
 
           <textarea
             rows={8}
+            {...bind("description")}
+            aria-label="Description"
             placeholder="Write a detailed product description..."
             className="
               w-full
@@ -97,6 +106,8 @@ export default function GeneralInformation() {
 
             <input
               type="text"
+              {...bind("vendor")}
+              aria-label="Vendor"
               placeholder="Apple"
               className="
                 w-full
@@ -119,6 +130,8 @@ export default function GeneralInformation() {
 
             <input
               type="text"
+              {...bind("productType")}
+              aria-label="Product type"
               placeholder="Smartphone"
               className="
                 w-full
@@ -144,6 +157,8 @@ export default function GeneralInformation() {
 
           <input
             type="text"
+            {...bind("tags")}
+            aria-label="Tags, comma separated"
             placeholder="iphone, apple, mobile, ios"
             className="
               w-full

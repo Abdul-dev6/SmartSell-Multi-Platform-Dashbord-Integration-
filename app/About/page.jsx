@@ -128,7 +128,7 @@ function AboutUs() {
               </h2>
 
               <p className="text-gray-600 leading-8">
-                Today's sellers operate across Amazon, Shopify, Walmart, eBay,
+                Today&apos;s sellers operate across Amazon, Shopify, Walmart, eBay,
                 TikTok Shop, and many other marketplaces.
                 <br />
                 <br />
@@ -137,7 +137,7 @@ function AboutUs() {
                 for inventory, listings, orders, shipping, and analytics.
                 <br />
                 <br />
-                Whether you're expanding internationally or managing multiple
+                Whether you&apos;re expanding internationally or managing multiple
                 brands, Nexus helps you scale confidently with real-time
                 insights and automation.
               </p>
@@ -162,17 +162,11 @@ function AboutUs() {
           <p className="text-blue-100 mt-5 text-lg">
             Start managing all your stores from one powerful dashboard.
           </p>
-          <Link href="Signup">
-            <motion.button
-              whileHover={{
-                scale: 1.05,
-                y: -3,
-              }}
-              whileTap={{ scale: 0.95 }}
-              className="mt-10 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg transition"
-            >
-              Start Your 10-Day Free Trial
-            </motion.button>
+          <Link
+            href="/Signup"
+            className="inline-block mt-10 bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold shadow-lg transition hover:scale-105"
+          >
+            Start Your 10-Day Free Trial
           </Link>
         </motion.div>
       </section>

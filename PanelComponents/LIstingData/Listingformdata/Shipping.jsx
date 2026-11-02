@@ -24,6 +24,9 @@ export default function Shipping() {
           <p className="text-sm text-slate-500">
             Configure shipping information for this product.
           </p>
+          <p className="mt-1 text-xs text-amber-700">
+            Not sent to Shopify yet. Set shipping details in Shopify admin.
+          </p>
         </div>
       </div>
 

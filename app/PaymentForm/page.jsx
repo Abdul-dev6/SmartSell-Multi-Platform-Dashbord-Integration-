@@ -318,7 +318,7 @@ const Paymentform = () => {
                   </h3>
 
                   <p className="mt-1 text-sm text-emerald-200/80">
-                    Try Nexus risk-free. If you're not satisfied, we'll refund
+                    Try Nexus risk-free. If you&apos;re not satisfied, we&apos;ll refund
                     your payment within 30 days.
                   </p>
                 </div>

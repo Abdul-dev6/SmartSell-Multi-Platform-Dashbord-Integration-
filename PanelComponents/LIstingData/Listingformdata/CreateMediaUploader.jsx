@@ -42,6 +42,9 @@ export default function MediaUploader() {
         <p className="text-sm text-slate-500 mt-1">
           Upload product images for your Shopify listing.
         </p>
+        <p className="mt-1 text-xs text-amber-700">
+          Images are not uploaded to Shopify yet. Add them in Shopify admin after saving.
+        </p>
       </div>
 
       {/* Upload Area */}

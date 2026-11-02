@@ -100,17 +100,8 @@ const Sidebar = () => {
           <div className="flex flex-col gap-1 pl-8 pr-2 text-sm text-slate-200">
             {Menuitems.map((item) => (
               <Link href={item.href} key={item.Name}>
-                <div
-                  className="
-            flex items-center gap-3
-            cursor-pointer
-            hover:bg-slate-800
-            p-2 rounded-lg
-            text-white
-            transition-all duration-300
-          "
-                >
-                  {item.icon}
+                <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-800 p-2 rounded-lg text-white transition-all duration-300">
+                  {item.Icon}
                   <h2>{item.Name}</h2>
                 </div>
               </Link>
@@ -139,16 +130,9 @@ const Sidebar = () => {
             {Analysis.map((item) => (
               <Link href={item.href} key={item.Name}>
                 <div
-                  className="
-            flex items-center gap-3
-            cursor-pointer
-            hover:bg-slate-800
-            p-2 rounded-lg
-            text-white
-            transition-all duration-300
-          "
+                  className="flex items-center gap-3 cursor-pointer hover:bg-slate-800 p-2 rounded-lg text-white transition-all duration-300"
                 >
-                  {item.icon}
+                  {item.Icon}
                   <h2>{item.Name}</h2>
                 </div>
               </Link>
@@ -187,9 +171,7 @@ const Sidebar = () => {
             className="flex items-center gap-3 cursor-pointer hover:bg-slate-800 p-2.5 rounded-xl text-white transition-all duration-300"
           >
             <CiSettings className="text-xl shrink-0" />
-            {!bar &&
-            <h2>Settings</h2>
-}
+            {!bar && <h2>Settings</h2>}
           </div>
         
       </div>

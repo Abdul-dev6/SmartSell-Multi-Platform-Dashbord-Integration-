@@ -7,6 +7,8 @@ export default function ActionButtons({
   onCancel,
   onSaveDraft,
   onPublish,
+  publishLabel = "Publish Product",
+  busyLabel = "Saving...",
 }) {
   return (
     <div className="sticky bottom-6 bg-white border border-slate-200 rounded-2xl shadow-lg p-5">
@@ -14,7 +16,9 @@ export default function ActionButtons({
         {/* Cancel */}
 
         <button
+          type="button"
           onClick={onCancel}
+          disabled={loading}
           className="
             flex items-center justify-center gap-2
             px-6 py-3
@@ -22,35 +26,40 @@ export default function ActionButtons({
             border border-slate-300
             hover:bg-slate-100
             transition-all
+            disabled:opacity-50
           "
         >
-          <X size={18} />
+          <X size={18} aria-hidden="true" />
           Cancel
         </button>
 
         {/* Save Draft */}
 
-        <button
-          onClick={onSaveDraft}
-          disabled={loading}
-          className="
-            flex items-center justify-center gap-2
-            px-6 py-3
-            rounded-xl
-            bg-amber-500
-            hover:bg-amber-600
-            text-white
-            transition-all
-            disabled:opacity-50
-          "
-        >
-          <Save size={18} />
-          Save Draft
-        </button>
+        {onSaveDraft && (
+          <button
+            type="button"
+            onClick={onSaveDraft}
+            disabled={loading}
+            className="
+              flex items-center justify-center gap-2
+              px-6 py-3
+              rounded-xl
+              bg-amber-500
+              hover:bg-amber-600
+              text-white
+              transition-all
+              disabled:opacity-50
+            "
+          >
+            <Save size={18} aria-hidden="true" />
+            Save Draft
+          </button>
+        )}
 
         {/* Publish */}
 
         <button
+          type="button"
           onClick={onPublish}
           disabled={loading}
           className="
@@ -66,13 +75,13 @@ export default function ActionButtons({
         >
           {loading ? (
             <>
-              <Loader2 size={18} className="animate-spin" />
-              Publishing...
+              <Loader2 size={18} className="animate-spin" aria-hidden="true" />
+              {busyLabel}
             </>
           ) : (
             <>
-              <UploadCloud size={18} />
-              Publish Product
+              <UploadCloud size={18} aria-hidden="true" />
+              {publishLabel}
             </>
           )}
         </button>

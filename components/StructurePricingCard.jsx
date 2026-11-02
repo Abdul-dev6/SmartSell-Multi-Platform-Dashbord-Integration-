@@ -52,7 +52,7 @@ const Card = ({
         {/* Features */}
 
         <div className="mt-10 flex-1">
-          <h2 className="font-semibold text-lg mb-5">What's Included</h2>
+          <h2 className="font-semibold text-lg mb-5">What&apos;s Included</h2>
 
           <ul className="space-y-4">
             {[products, analytics, reports, dashboard, support].map(
@@ -74,18 +74,9 @@ const Card = ({
 
         <Link
           href={`/PaymentForm?title=${encodeURIComponent(title)}&price=${encodeURIComponent(price)}&products=${encodeURIComponent(products)}&analytics=${encodeURIComponent(analytics)}&reports=${encodeURIComponent(reports)}&dashboard=${encodeURIComponent(dashboard)}&support=${encodeURIComponent(support)}`}
+          className="block text-center mt-10 w-full rounded-xl bg-gradient-to-r from-indigo-600 via-blue-500 to-emerald-500 py-4 font-semibold text-white shadow-lg transition hover:opacity-95"
         >
-          <motion.button
-            whileHover={{
-              scale: 1.03,
-            }}
-            whileTap={{
-              scale: 0.95,
-            }}
-            className="mt-10 w-full rounded-xl bg-gradient-to-r from-indigo-600 via-blue-500 to-emerald-500 py-4 font-semibold text-white shadow-lg transition"
-          >
-            Buy Now
-          </motion.button>
+          Buy Now
         </Link>
       </div>
     </motion.div>

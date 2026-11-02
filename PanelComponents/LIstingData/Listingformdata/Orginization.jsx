@@ -1,9 +1,13 @@
 "use client";
 
+import { makeBinder } from "./bind";
+
 import { motion } from "framer-motion";
 import { FolderTree } from "lucide-react";
 
-export default function Organization() {
+export default function Organization({ formData, setFormData, errors = {} }) {
+  const bind = makeBinder(formData, setFormData, errors);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -36,6 +40,8 @@ export default function Organization() {
           </label>
 
           <select
+            {...bind("status")}
+            aria-label="Product status"
             className="
               w-full
               border
@@ -48,9 +54,9 @@ export default function Organization() {
               focus:ring-indigo-500
             "
           >
-            <option>Active</option>
-            <option>Draft</option>
-            <option>Archived</option>
+            <option value="active">Active</option>
+            <option value="draft">Draft</option>
+            <option value="archived">Archived</option>
           </select>
         </div>
 

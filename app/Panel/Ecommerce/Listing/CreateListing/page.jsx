@@ -1,4 +1,4 @@
-import CreateListingHeader from "@/PanelComponents/LIstingData/ListingHeader";
+import CreateListingHeader from "@/PanelComponents/LIstingData/Listingformdata/CreateListingHeader";
 import CreateListingForm from "@/PanelComponents/LIstingData/Listingformdata/CreateListingForm";
 
 export default function CreateListingPage() {

@@ -15,8 +15,8 @@ function useReveal(
     ).matches;
 
     if (prefersReduced) {
-      setVisible(true);
-      return;
+      const frame = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(frame);
     }
 
     const node = ref.current;
@@ -168,10 +168,11 @@ const HomePage = () => {
         </p>
 
         <div className="relative z-10 mt-2 flex flex-col sm:flex-row gap-4 items-center">
-          <Link href="/Pricing">
-            <button className="mt-4 px-3 py-3 bg-white text-black text-xl font-medium cursor-pointer hover:bg-slate-950 hover:text-white hover:-translate-y-0.5 transition rounded-xl">
-              Get Started
-            </button>
+          <Link
+            href="/Pricing"
+            className="mt-4 px-3 py-3 bg-white text-black text-xl font-medium cursor-pointer hover:bg-slate-950 hover:text-white hover:-translate-y-0.5 transition rounded-xl inline-block"
+          >
+            Get Started
           </Link>
         </div>
 
@@ -347,10 +348,11 @@ const HomePage = () => {
         <p className="relative z-10 mt-3 text-blue-200/80 max-w-md mx-auto">
           Connect your first marketplace in under five minutes.
         </p>
-        <Link href="/Signup">
-          <button className="relative z-10 mt-8 px-6 py-3 bg-white text-black text-lg font-medium rounded-xl hover:bg-slate-950 hover:text-white hover:-translate-y-0.5 transition">
-            Get Started
-          </button>
+        <Link
+          href="/Signup"
+          className="relative z-10 mt-8 inline-block px-6 py-3 bg-white text-black text-lg font-medium rounded-xl hover:bg-slate-950 hover:text-white hover:-translate-y-0.5 transition"
+        >
+          Get Started
         </Link>
       </section>
     </>

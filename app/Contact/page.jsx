@@ -32,8 +32,8 @@ const Contactpage = () => {
             <h1 className="text-3xl md:text-4xl font-bold">Contact Us</h1>
 
             <p className="mt-4 text-purple-100 leading-7">
-              We're here to help you grow your business. Feel free to contact us
-              anytime. We'll get back to you as soon as possible.
+              We&apos;re here to help you grow your business. Feel free to contact us
+              anytime. We&apos;ll get back to you as soon as possible.
             </p>
           </div>
 
@@ -104,7 +104,7 @@ const Contactpage = () => {
             <h2 className="text-3xl font-bold text-gray-800">Get in Touch</h2>
 
             <p className="text-gray-600 mt-2">
-              Have questions? Send us a message and we'll reply shortly.
+              Have questions? Send us a message and we&apos;ll reply shortly.
             </p>
           </div>
 

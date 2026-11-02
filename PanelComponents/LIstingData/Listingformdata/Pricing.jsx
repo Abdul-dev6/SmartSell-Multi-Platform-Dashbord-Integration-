@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { makeBinder } from "./bind";
 import { motion } from "framer-motion";
 import { DollarSign } from "lucide-react";
 
-export default function Pricing() {
-  const [price, setPrice] = useState("");
-  const [comparePrice, setComparePrice] = useState("");
-  const [cost, setCost] = useState("");
+export default function Pricing({ formData, setFormData, errors = {} }) {
+  const bind = makeBinder(formData, setFormData, errors);
+  const price = formData?.price ?? "";
+  const cost = formData?.cost ?? "";
 
   const sellingPrice = Number(price) || 0;
   const costPrice = Number(cost) || 0;
@@ -49,8 +49,11 @@ export default function Pricing() {
           <input
             type="number"
             placeholder="999"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
+            {...bind("price")}
+            aria-label="Price"
+            min="0"
+            step="0.01"
+            required
             className="
               w-full
               border
@@ -75,8 +78,10 @@ export default function Pricing() {
           <input
             type="number"
             placeholder="1200"
-            value={comparePrice}
-            onChange={(e) => setComparePrice(e.target.value)}
+            {...bind("comparePrice")}
+            aria-label="Compare-at price"
+            min="0"
+            step="0.01"
             className="
               w-full
               border
@@ -101,8 +106,10 @@ export default function Pricing() {
           <input
             type="number"
             placeholder="850"
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
+            {...bind("cost")}
+            aria-label="Cost per item (not sent to Shopify yet)"
+            min="0"
+            step="0.01"
             className="
               w-full
               border

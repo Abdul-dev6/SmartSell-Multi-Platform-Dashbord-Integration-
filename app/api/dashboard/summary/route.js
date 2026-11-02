@@ -1,0 +1,27 @@
+import { NextResponse } from "next/server";
+import { requireUser } from "@/lib/auth/GetCurrentUser";
+import { getActiveStores, syncSummary } from "@/lib/catalog";
+import { getDashboardSummary } from "@/lib/analytics/dashboard";
+
+export async function GET(req) {
+  try {
+    const { user, response } = await requireUser(req);
+    if (response) {
+      return response;
+    }
+
+    const stores = await getActiveStores(user._id);
+    const summary = await getDashboardSummary(user._id, stores);
+
+    return NextResponse.json({
+      success: true,
+      data: { ...summary, sync: syncSummary(stores) },
+    });
+  } catch (error) {
+    console.error("Dashboard summary error:", error.name, error.message);
+    return NextResponse.json(
+      { success: false, message: "Could not load dashboard data." },
+      { status: 500 },
+    );
+  }
+}

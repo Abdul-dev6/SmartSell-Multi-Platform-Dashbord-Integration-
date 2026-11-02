@@ -6,15 +6,51 @@ import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { signIn } from "next-auth/react";
 const Signin = () => {
+  const handleGoogleLogin = () => {
+    signIn("google", {
+      callbackUrl: "/api/auth/google",
+    });
+  };
+  const handlegithubLogin = () => {
+    signIn("github", {
+      callbackUrl: "/api/auth/Github",
+    });
+  };
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    router.push("/Panel");
+    setError("");
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        router.push("/Panel");
+        return;
+      }
+      setError(data.message || "Login failed. Please try again.");
+    } catch {
+      setError("Could not reach the server. Check your connection and try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -49,6 +85,7 @@ const Signin = () => {
 
         <div className="flex flex-col sm:flex-row gap-3">
           <motion.button
+            onClick={handlegithubLogin}
             whileHover={{ scale: 1.03, y: -3 }}
             whileTap={{ scale: 0.95 }}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-400 bg-white/[0.03] py-3 text-white transition cursor-pointer hover:bg-slate-200/30 hover:border-slate-200"
@@ -58,6 +95,7 @@ const Signin = () => {
           </motion.button>
 
           <motion.button
+            onClick={handleGoogleLogin}
             whileHover={{ scale: 1.03, y: -3 }}
             whileTap={{ scale: 0.95 }}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-400 bg-white/[0.03] py-3 text-white transition cursor-pointer hover:bg-slate-200/30 hover:border-slate-200"
@@ -133,10 +171,16 @@ const Signin = () => {
               scale: 0.95,
             }}
             type="submit"
-            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 py-3.5 font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:from-indigo-600 hover:to-purple-700"
+            disabled={submitting}
+            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 py-3.5 font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:from-indigo-600 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Sign In
+            {submitting ? "Signing In..." : "Sign In"}
           </motion.button>
+          {error && (
+            <p role="alert" className="text-sm text-red-400">
+              {error}
+            </p>
+          )}
         </form>
 
         {/* Footer */}
@@ -148,7 +192,7 @@ const Signin = () => {
           className="mt-8 text-center"
         >
           <p className="text-sm text-slate-400">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
               href="/Signup"
               className="font-semibold text-indigo-400 transition hover:text-indigo-300"

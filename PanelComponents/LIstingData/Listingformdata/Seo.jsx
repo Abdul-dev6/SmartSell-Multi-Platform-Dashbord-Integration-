@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { makeBinder } from "./bind";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 
-export default function Seo() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [handle, setHandle] = useState("");
+export default function Seo({ formData, setFormData, errors = {} }) {
+  const bind = makeBinder(formData, setFormData, errors);
+  const title = formData?.seoTitle ?? "";
+  const description = formData?.seoDescription ?? "";
+  const handle = formData?.handle ?? "";
 
   return (
     <motion.div
@@ -42,8 +43,8 @@ export default function Seo() {
 
           <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            {...bind("seoTitle")}
+            aria-label="SEO title"
             placeholder="Apple iPhone 16 Pro"
             maxLength={70}
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
@@ -63,8 +64,8 @@ export default function Seo() {
 
           <textarea
             rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            {...bind("seoDescription")}
+            aria-label="SEO description"
             maxLength={160}
             placeholder="Describe your product for search engines..."
             className="w-full rounded-xl border border-slate-300 px-4 py-3 resize-none outline-none focus:ring-2 focus:ring-indigo-500"
@@ -82,8 +83,8 @@ export default function Seo() {
 
           <input
             type="text"
-            value={handle}
-            onChange={(e) => setHandle(e.target.value)}
+            {...bind("handle")}
+            aria-label="URL handle"
             placeholder="iphone-16-pro"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />

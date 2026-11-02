@@ -13,7 +13,24 @@ import {
   Trash2,
 } from "lucide-react";
 
-export default function ListingRow({ product }) {
+export default function ListingRow({ ListingData=[] }) {
+
+    function formatUpdatedAt(timestamp) {
+    if (!timestamp || timestamp === "Not available") {
+      return "Not available";
+    }
+
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) {
+      return "Not available";
+    }
+
+    return date.toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
   const [openMenu, setOpenMenu] = useState(false);
 
   const getStatusColor = (status) => {
@@ -63,8 +80,8 @@ export default function ListingRow({ product }) {
 
         <div className="flex items-center gap-4 sm:gap-5">
           <Image
-            src={product.image}
-            alt={product.title}
+            src={ListingData.image}
+            alt={ListingData.title}
             width={80}
             height={80}
             className="rounded-xl border object-cover"
@@ -72,18 +89,18 @@ export default function ListingRow({ product }) {
 
           <div>
             <h2 className="text-xl font-semibold text-slate-800">
-              {product.title}
+              {ListingData.title}
             </h2>
 
-            <p className="text-sm text-slate-500 mt-2">SKU : {product.sku}</p>
+            <p className="text-sm text-slate-500 mt-2">SKU : {ListingData.sku}</p>
 
             <div className="flex flex-wrap gap-2 mt-4">
               <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-medium">
-                {product.vendor}
+                {ListingData.vendor}
               </span>
 
               <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-medium">
-                {product.collection}
+                {ListingData.collection}
               </span>
             </div>
           </div>
@@ -96,7 +113,7 @@ export default function ListingRow({ product }) {
           <div>
             <p className="text-sm text-slate-500">Price</p>
             <h3 className="text-xl font-bold text-slate-800">
-              {product.price}
+              {ListingData.price}
             </h3>
           </div>
 
@@ -105,7 +122,7 @@ export default function ListingRow({ product }) {
           <div>
             <p className="text-sm text-slate-500">Inventory</p>
             <h3 className="text-xl font-bold text-indigo-600">
-              {product.inventory}
+              {ListingData.inventory}
             </h3>
           </div>
 
@@ -116,10 +133,10 @@ export default function ListingRow({ product }) {
 
             <span
               className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                product.status,
+                ListingData.status,
               )}`}
             >
-              {product.status}
+              {ListingData.status}
             </span>
           </div>
 
@@ -129,7 +146,7 @@ export default function ListingRow({ product }) {
             <p className="text-sm text-slate-500">Updated</p>
 
             <h3 className="text-sm font-semibold text-slate-700 mt-2">
-              {product.updated}
+              {formatUpdatedAt(ListingData.updated)}
             </h3>
           </div>
 
