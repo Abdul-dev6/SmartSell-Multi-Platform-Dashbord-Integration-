@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plus, RefreshCcw } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 export default function ListingHeader() {
   const router = useRouter();
@@ -22,25 +22,7 @@ export default function ListingHeader() {
 
       <div className="flex flex-wrap gap-4">
         <button
-          className="
-          flex
-          items-center
-          gap-2
-          px-5
-          py-3
-          rounded-xl
-          bg-white
-          border
-          border-slate-300
-          hover:bg-slate-100
-          transition
-        "
-        >
-          <RefreshCcw size={18} />
-          Sync Products
-        </button>
-
-        <button
+          type="button"
           onClick={() => router.push("/Panel/Ecommerce/Listing/CreateListing")}
           className="
           flex
@@ -57,7 +39,7 @@ export default function ListingHeader() {
           shadow-lg
         "
         >
-          <Plus size={18} />
+          <Plus size={18} aria-hidden="true" />
           Create Listing
         </button>
       </div>

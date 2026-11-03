@@ -47,6 +47,7 @@ export default function Shipping() {
           <input
             type="number"
             step="0.01"
+            aria-label="Weight in kg"
             placeholder="0.50"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />
@@ -60,6 +61,7 @@ export default function Shipping() {
 
             <input
               type="number"
+              aria-label="Length"
               placeholder="20"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
             />
@@ -70,6 +72,7 @@ export default function Shipping() {
 
             <input
               type="number"
+              aria-label="Width"
               placeholder="10"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
             />
@@ -80,6 +83,7 @@ export default function Shipping() {
 
             <input
               type="number"
+              aria-label="Height"
               placeholder="5"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
             />
@@ -93,7 +97,7 @@ export default function Shipping() {
             Country of Origin
           </label>
 
-          <select className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500">
+          <select aria-label="Country of origin" className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500">
             <option>Pakistan</option>
             <option>United States</option>
             <option>China</option>
@@ -108,6 +112,7 @@ export default function Shipping() {
 
           <input
             type="text"
+            aria-label="HS code"
             placeholder="8517.13"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500"
           />

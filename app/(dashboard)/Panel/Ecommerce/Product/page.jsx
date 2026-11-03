@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 
 import ProductHeader from "@/components/dashboard/products/ProductHeader";
 import ProductCards from "@/components/dashboard/products/ProductCards";
@@ -14,9 +15,23 @@ import NeedsAttention from "@/components/dashboard/products/NeedsAttention";
 import useCatalogFilters from "@/components/dashboard/shared/useCatalogFilters";
 
 export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <ProductsWithQuery />
+    </Suspense>
+  );
+}
+
+// Remounts when the navbar search changes, so the new query applies.
+function ProductsWithQuery() {
+  const q = useSearchParams().get("q") || "";
+  return <ProductsContent key={q} initialQuery={q} />;
+}
+
+function ProductsContent({ initialQuery }) {
   const { body, error, loading, reload } = useApiData("/api/inventory");
   const ProductData = useMemo(() => body?.data || [], [body]);
-  const { filters, setFilters, filtered, options } = useCatalogFilters(ProductData);
+  const { filters, setFilters, filtered, options } = useCatalogFilters(ProductData, initialQuery);
 
   return (
     <motion.div

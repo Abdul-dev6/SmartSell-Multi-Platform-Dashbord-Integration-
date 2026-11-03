@@ -3,7 +3,7 @@
 import { FilterSelect, ResultSummary, SearchInput } from "@/components/dashboard/shared/FilterControls";
 import { DEFAULT_FILTERS, STATUS_LABELS, isFiltered } from "@/components/dashboard/shared/catalogFilters";
 
-export default function SearchFilter({ filters, setFilters, productTypes = [], shown = 0, total = 0 }) {
+export default function ProductFilters({ filters, setFilters, productTypes = [], shown = 0, total = 0 }) {
   const set = (key) => (value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
   return (

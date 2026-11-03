@@ -93,20 +93,6 @@ function Footer() {
             © 2026 <span className="font-semibold text-slate-400">Nexus™</span>.
             All rights reserved.
           </p>
-          <div className="flex gap-5 text-xs text-slate-500">
-            <Link
-              href="/privacy"
-              className="hover:text-blue-400 transition-colors duration-300"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="hover:text-blue-400 transition-colors duration-300"
-            >
-              Terms
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

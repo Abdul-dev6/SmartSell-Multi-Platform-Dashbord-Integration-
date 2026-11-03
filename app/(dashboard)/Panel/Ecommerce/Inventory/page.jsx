@@ -20,7 +20,7 @@ export default function InventoryPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
-      <InventoryHeader inventorydata={inventorydata} />
+      <InventoryHeader shop={inventorydata.find((row) => row.shop)?.shop} />
 
       {body && (
         <div className="mt-6">

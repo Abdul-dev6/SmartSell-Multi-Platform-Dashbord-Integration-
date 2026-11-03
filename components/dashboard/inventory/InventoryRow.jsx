@@ -1,20 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
-
-import {
-  MoreVertical,
-  Eye,
-  Pencil,
-  Trash2,
-  ArrowRightLeft,
-  PackagePlus,
-} from "lucide-react";
+import { ExternalLink, Pencil, PackagePlus } from "lucide-react";
+import ProductThumb from "@/components/dashboard/shared/ProductThumb";
+import RowActionsMenu from "@/components/dashboard/shared/RowActionsMenu";
+import { shopifyAdminUrl } from "@/components/dashboard/products/deleteProduct";
 
 export default function InventoryRow({ product }) {
-  const [openMenu, setOpenMenu] = useState(false);
  
  
   function StockavailabilityStatus(available) {
@@ -114,13 +106,7 @@ export default function InventoryRow({ product }) {
         {/* Left */}
 
         <div className="flex items-center gap-4 sm:gap-5">
-          <Image
-            src={product.image}
-            alt={product.name}
-            width={70}
-            height={70}
-            className="rounded-xl border object-cover"
-          />
+          <ProductThumb src={product.image} alt={product.name} size={70} className="rounded-xl" />
 
           <div>
             <h2 className="text-xl font-semibold text-slate-800">
@@ -157,62 +143,29 @@ export default function InventoryRow({ product }) {
 
         {/* Right */}
 
-        <div className="relative">
-          <button
-            onClick={() => setOpenMenu(!openMenu)}
-            className="
-              p-2
-              rounded-lg
-              hover:bg-slate-100
-              transition
-            "
-          >
-            <MoreVertical size={22} />
-          </button>
-
-          {openMenu && (
-            <div
-              className="
-                absolute
-                right-0
-                mt-2
-                w-56
-                rounded-xl
-                bg-white
-                shadow-xl
-                border
-                border-slate-200
-                z-50
-                overflow-hidden
-              "
-            >
-              <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                <Eye size={18} />
-                View Details
-              </button>
-
-              <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                <Pencil size={18} />
-                Edit Product
-              </button>
-
-              <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                <PackagePlus size={18} />
-                Update Stock
-              </button>
-
-              <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                <ArrowRightLeft size={18} />
-                Transfer Stock
-              </button>
-
-              <button className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50">
-                <Trash2 size={18} />
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Quantities are read-only in SmartSell; stock is changed in Shopify. */}
+        <RowActionsMenu
+          label={`Actions for ${product.name}`}
+          items={[
+            product.local_id && {
+              label: "Edit product",
+              icon: Pencil,
+              href: `/Panel/Ecommerce/Product/${product.local_id}/edit`,
+            },
+            shopifyAdminUrl.variant(product.shop, product.product_id, product.variant_id) && {
+              label: "Adjust stock in Shopify",
+              icon: PackagePlus,
+              href: shopifyAdminUrl.variant(product.shop, product.product_id, product.variant_id),
+              external: true,
+            },
+            shopifyAdminUrl.product(product.shop, product.product_id) && {
+              label: "View in Shopify",
+              icon: ExternalLink,
+              href: shopifyAdminUrl.product(product.shop, product.product_id),
+              external: true,
+            },
+          ]}
+        />
       </div>
       {/* Bottom Section */}
 

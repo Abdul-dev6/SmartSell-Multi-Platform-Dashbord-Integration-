@@ -78,18 +78,6 @@ export default function Inventory({ formData, setFormData, errors = {} }) {
           />
         </div>
 
-        {/* Warehouse */}
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Warehouse</label>
-
-          <select className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500">
-            <option>Main Warehouse</option>
-            <option>Lahore Warehouse</option>
-            <option>Karachi Warehouse</option>
-          </select>
-        </div>
-
         {/* Track Inventory */}
 
         <label className="flex items-center gap-3 cursor-pointer">

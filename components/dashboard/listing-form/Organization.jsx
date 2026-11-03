@@ -28,6 +28,9 @@ export default function Organization({ formData, setFormData, errors = {} }) {
           <p className="text-sm text-slate-500">
             Organize and publish your product.
           </p>
+          <p className="mt-1 text-xs text-amber-700">
+            Only Status is sent to Shopify. Collection, category, sales channel and visibility are not sent yet.
+          </p>
         </div>
       </div>
 
@@ -67,6 +70,7 @@ export default function Organization({ formData, setFormData, errors = {} }) {
 
           <input
             type="text"
+            aria-label="Collection (not sent to Shopify yet)"
             placeholder="Summer Collection"
             className="
               w-full
@@ -91,6 +95,7 @@ export default function Organization({ formData, setFormData, errors = {} }) {
 
           <input
             type="text"
+            aria-label="Category (not sent to Shopify yet)"
             placeholder="Electronics"
             className="
               w-full
@@ -114,6 +119,7 @@ export default function Organization({ formData, setFormData, errors = {} }) {
           </label>
 
           <select
+            aria-label="Sales channel (not sent to Shopify yet)"
             className="
               w-full
               border

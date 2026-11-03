@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
 
@@ -54,11 +54,12 @@ function todayStr() {
 }
 
 /* ── sub: DateRow ── */
-function DateRow({ y, m, d, setY, setM, setD }) {
+function DateRow({ label, y, m, d, setY, setM, setD }) {
   const years = [-1, 0, 1, 2].map((o) => new Date().getFullYear() + o);
   return (
     <div className="flex gap-1">
       <select
+        aria-label={`${label} month`}
         value={m}
         onChange={(e) => {
           setM(+e.target.value);
@@ -73,6 +74,7 @@ function DateRow({ y, m, d, setY, setM, setD }) {
         ))}
       </select>
       <select
+        aria-label={`${label} day`}
         value={d}
         onChange={(e) => setD(+e.target.value)}
         className="w-14 border border-gray-200 rounded-lg px-1 py-2 text-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -84,6 +86,7 @@ function DateRow({ y, m, d, setY, setM, setD }) {
         )}
       </select>
       <select
+        aria-label={`${label} year`}
         value={y}
         onChange={(e) => setY(+e.target.value)}
         className="w-20 border border-gray-200 rounded-lg px-1 py-2 text-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -97,10 +100,11 @@ function DateRow({ y, m, d, setY, setM, setD }) {
 }
 
 /* ── sub: TimeRow ── */
-function TimeRow({ h, mi, ap, setH, setMi, setAp }) {
+function TimeRow({ label, h, mi, ap, setH, setMi, setAp }) {
   return (
     <div className="flex gap-1">
       <select
+        aria-label={`${label} hour`}
         value={h}
         onChange={(e) => setH(e.target.value)}
         className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -110,6 +114,7 @@ function TimeRow({ h, mi, ap, setH, setMi, setAp }) {
         ))}
       </select>
       <select
+        aria-label={`${label} minutes`}
         value={mi}
         onChange={(e) => setMi(e.target.value)}
         className="flex-1 border border-gray-200 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -119,6 +124,7 @@ function TimeRow({ h, mi, ap, setH, setMi, setAp }) {
         ))}
       </select>
       <select
+        aria-label={`${label} AM or PM`}
         value={ap}
         onChange={(e) => setAp(e.target.value)}
         className="w-16 border border-gray-200 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -174,19 +180,34 @@ function Modal({ prefillDate, onSave, onClose }) {
     onClose();
   }
 
+  useEffect(() => {
+    const onKey = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(6px)" }}
     >
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="calendar-modal-title"
+        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden"
+      >
         {/* header */}
         <div className="bg-gray-900 px-7 py-5 relative">
           <p className="text-xs font-bold tracking-widest text-indigo-400 uppercase mb-1">
             New Event
           </p>
-          <h2 className="text-white text-lg font-bold">Add to Calendar</h2>
+          <h2 id="calendar-modal-title" className="text-white text-lg font-bold">Add to Calendar</h2>
           <button
+            type="button"
+            aria-label="Close"
             onClick={onClose}
             className="absolute top-4 right-5 text-gray-500 hover:text-white text-2xl leading-none bg-transparent border-0 cursor-pointer"
           >
@@ -196,7 +217,7 @@ function Modal({ prefillDate, onSave, onClose }) {
 
         {/* body */}
         <div className="px-7 py-6 flex flex-col gap-4">
-          {err && <p className="text-rose-500 text-xs font-semibold">{err}</p>}
+          {err && <p role="alert" className="text-rose-500 text-xs font-semibold">{err}</p>}
 
           {/* title */}
           <div>
@@ -204,6 +225,8 @@ function Modal({ prefillDate, onSave, onClose }) {
               Title *
             </label>
             <input
+              aria-label="Event title"
+              autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Team standup"
@@ -217,6 +240,7 @@ function Modal({ prefillDate, onSave, onClose }) {
               Description
             </label>
             <input
+              aria-label="Event description"
               value={desc}
               onChange={(e) => setDesc(e.target.value)}
               placeholder="Optional note"
@@ -231,6 +255,7 @@ function Modal({ prefillDate, onSave, onClose }) {
                 Start Date
               </label>
               <DateRow
+                label="Start"
                 y={sY}
                 m={sM}
                 d={sD}
@@ -244,6 +269,7 @@ function Modal({ prefillDate, onSave, onClose }) {
                 End Date
               </label>
               <DateRow
+                label="End"
                 y={eY}
                 m={eM}
                 d={eD}
@@ -261,6 +287,7 @@ function Modal({ prefillDate, onSave, onClose }) {
                 Start Time
               </label>
               <TimeRow
+                label="Start"
                 h={sH}
                 mi={sMi}
                 ap={sAp}
@@ -274,6 +301,7 @@ function Modal({ prefillDate, onSave, onClose }) {
                 End Time
               </label>
               <TimeRow
+                label="End"
                 h={eH}
                 mi={eMi}
                 ap={eAp}

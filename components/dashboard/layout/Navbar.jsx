@@ -1,23 +1,48 @@
+"use client";
+
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { IoMoonOutline, IoSunnyOutline } from "react-icons/io5";
+import { usePathname, useRouter } from "next/navigation";
 import { HiOutlineBellAlert } from "react-icons/hi2";
 import { CiSettings } from "react-icons/ci";
 import { FaBars } from "react-icons/fa6";
 import { FiUser, FiBell, FiHelpCircle, FiLogOut } from "react-icons/fi";
 import { PanelContext } from "@/components/dashboard/PanelContext";
+import UserInitials from "@/components/dashboard/layout/UserInitials";
+
+// Page titles shown in the top bar, by route.
+const PAGE_TITLES = [
+  [/^\/Panel\/Dashboard/, "Dashboard", "Welcome back! Here's what's happening today."],
+  [/^\/Panel\/Analysis\/Reports/, "Reports", "Orders, revenue and order value."],
+  [/^\/Panel\/Ecommerce\/Product\/[^/]+\/edit/, "Edit product", "Changes are saved to Shopify."],
+  [/^\/Panel\/Ecommerce\/Product/, "Products", "Your synced Shopify products."],
+  [/^\/Panel\/Ecommerce\/Listing\/CreateListing/, "Create listing", "Publish a new product to Shopify."],
+  [/^\/Panel\/Ecommerce\/Listing/, "Listings", "Your Shopify listings."],
+  [/^\/Panel\/Ecommerce\/Inventory/, "Inventory", "Stock levels by location."],
+  [/^\/Panel\/Ecommerce\/Integration/, "Integrations", "Connected stores and live updates."],
+  [/^\/Panel\/Expenses/, "Expenses", "Costs used for profit."],
+  [/^\/Panel\/Calendar/, "Calendar", "Your events."],
+  [/^\/Panel\/User/, "Profile", "Your account."],
+];
+
+function pageTitle(pathname) {
+  const match = PAGE_TITLES.find(([pattern]) => pattern.test(pathname || ""));
+  return match ? { title: match[1], subtitle: match[2] } : { title: "Dashboard", subtitle: "" };
+}
 
 function Navbar() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { title, subtitle } = pageTitle(pathname);
+  const [query, setQuery] = useState("");
   const [notification, setNotification] = useState(false);
   const { bar, setbar } = useContext(PanelContext);
   const { setting, setSetting, currentUser } = useContext(PanelContext);
   const displayName = currentUser?.name || currentUser?.email || "";
   const displaySub = currentUser?.name ? currentUser.email : "";
-  const [darkMode, setDarkMode] = useState(false);
 
   // Separate refs for each dropdown
   const settingRef = useRef(null);
   const notificationRef = useRef(null);
-  const darkRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -31,11 +56,31 @@ function Navbar() {
         setNotification(false);
       }
     };
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setSetting(false);
+        setNotification(false);
+      }
+    };
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [setSetting]);
+
+  // Searches products (name, SKU, vendor, type, location) on the Products page.
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const q = query.trim();
+    router.push(q ? `/Panel/Ecommerce/Product?q=${encodeURIComponent(q)}` : "/Panel/Ecommerce/Product");
+  };
+
+  const goTo = (href) => {
+    setSetting(false);
+    router.push(href);
+  };
 
   const datanotification = [];
 
@@ -51,9 +96,17 @@ function Navbar() {
   };
 
   const settingItems = [
-    { icon: <FiUser size={15} />, label: "Profile", color: "text-slate-600" },
-    { icon: <FiBell size={15} />, label: "Notifications", color: "text-slate-600" },
-    { icon: <FiHelpCircle size={15} />, label: "Help & Support", color: "text-slate-600" },
+    { icon: <FiUser size={15} />, label: "Profile", color: "text-slate-600", onClick: () => goTo("/Panel/User") },
+    {
+      icon: <FiBell size={15} />,
+      label: "Notifications",
+      color: "text-slate-600",
+      onClick: () => {
+        setSetting(false);
+        setNotification(true);
+      },
+    },
+    { icon: <FiHelpCircle size={15} />, label: "Help & Support", color: "text-slate-600", onClick: () => goTo("/Contact") },
     { icon: <FiLogOut size={15} />, label: "Logout", color: "text-red-500", onClick: handleLogout },
   ];
 
@@ -63,23 +116,33 @@ function Navbar() {
 
         {/* Left: Hamburger + Title */}
         <div className="flex items-center gap-3 shrink-0">
-          <FaBars
-            className="text-xl cursor-pointer text-slate-600 hover:text-indigo-600 transition"
+          <button
+            type="button"
             onClick={() => setbar(!bar)}
-          />
+            aria-label={bar ? "Open sidebar" : "Close sidebar"}
+            aria-expanded={!bar}
+            className="rounded-lg p-1 text-slate-600 hover:text-indigo-600 transition"
+          >
+            <FaBars className="text-xl" aria-hidden="true" />
+          </button>
           <div className="hidden sm:flex flex-col leading-tight">
-            <h1 className="font-semibold text-slate-900">Dashboard</h1>
-            <h4 className="text-xs text-slate-500">
-              Welcome back! Here&apos;s what&apos;s happening today.
-            </h4>
+            <h1 className="font-semibold text-slate-900">{title}</h1>
+            {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="relative hidden md:block flex-1 max-w-2xl mx-2 lg:mx-4 min-w-0">
+        <form
+          role="search"
+          onSubmit={handleSearch}
+          className="relative hidden md:block flex-1 max-w-2xl mx-2 lg:mx-4 min-w-0"
+        >
           <input
-            type="text"
-            placeholder="Search anything..."
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search products"
+            placeholder="Search products, SKU, vendor..."
             className="w-full px-4 py-2.5 pl-10 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
           />
           <svg
@@ -95,20 +158,10 @@ function Navbar() {
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
           </svg>
-        </div>
+        </form>
 
         {/* Right: Action Icons */}
         <div className="flex items-center gap-1 sm:gap-2 text-xl text-slate-600 shrink-0 ml-auto">
-
-          {/* Dark Mode Toggle */}
-          <button
-            ref={darkRef}
-            onClick={() => setDarkMode(!darkMode)}
-            className="rounded-full p-2 hover:bg-slate-100 transition"
-            aria-label="Toggle theme"
-          >
-            {darkMode ? <IoSunnyOutline /> : <IoMoonOutline />}
-          </button>
 
           {/* Notification Bell */}
           <div className="relative" ref={notificationRef}>
@@ -203,10 +256,7 @@ function Navbar() {
               <div className="absolute right-0 top-full z-20 mt-2 w-[calc(100vw-2rem)] max-w-xs rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-200/80 sm:w-56 text-slate-800 overflow-hidden">
                 {/* User identity header */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-sky-50">
-                  <div
-                    className="w-9 h-9 rounded-full bg-cover bg-center border-2 border-indigo-200 shrink-0"
-                    style={{ backgroundImage: "url('/user.avif')" }}
-                  />
+                  <UserInitials user={currentUser} className="w-9 h-9 text-sm" />
                   <div>
                     <p className="text-sm font-semibold text-slate-900 truncate max-w-[10rem]">{displayName}</p>
                     {displaySub && <p className="text-xs text-slate-500 truncate max-w-[10rem]">{displaySub}</p>}
@@ -233,12 +283,9 @@ function Navbar() {
 
           {/* User Avatar */}
           <div className="hidden lg:flex items-center gap-2 ml-1 pl-3 border-l border-slate-200">
-            <div
-              className="w-9 h-9 rounded-full border-2 border-slate-200 bg-cover bg-center"
-              style={{ backgroundImage: "url('/user.avif')" }}
-            />
+            <UserInitials user={currentUser} className="w-9 h-9 text-sm" />
             <div className="flex flex-col leading-tight">
-              <h1 className="font-semibold text-sm text-slate-900 truncate max-w-[10rem]">{displayName}</h1>
+              <span className="font-semibold text-sm text-slate-900 truncate max-w-[10rem]">{displayName}</span>
               {displaySub && <h3 className="text-xs text-slate-500 truncate max-w-[10rem]">{displaySub}</h3>}
             </div>
           </div>

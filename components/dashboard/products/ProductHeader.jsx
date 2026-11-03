@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 
@@ -19,7 +20,8 @@ export default function ProductHeader() {
         </p>
       </div>
 
-      <button
+      <Link
+        href="/Panel/Ecommerce/Listing/CreateListing"
         className="
         flex items-center gap-2
         bg-indigo-600
@@ -35,9 +37,9 @@ export default function ProductHeader() {
         hover:scale-105
         "
       >
-        <Plus size={18} />
+        <Plus size={18} aria-hidden="true" />
         Add Product
-      </button>
+      </Link>
     </motion.div>
   );
 }

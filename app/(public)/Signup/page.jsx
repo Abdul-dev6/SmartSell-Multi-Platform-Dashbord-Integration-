@@ -15,18 +15,32 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
   const handleGoogleSignup = () => {
     signIn("google", {
       callbackUrl: "/api/auth/google",
     });
   };
+  const handleGithubSignup = () => {
+    signIn("github", {
+      callbackUrl: "/api/auth/Github",
+    });
+  };
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+    setError("");
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+    setSubmitting(true);
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -43,12 +57,14 @@ const Signup = () => {
       const data = await response.json();
 
       if (response.ok) {
-        Router.push("/Login");
-      } else {
-        alert(data.message || "Signup failed");
+        Router.push("/Login?registered=1");
+        return;
       }
+      setError(data.message || "Sign-up failed. Please try again.");
     } catch {
-      alert("Registration failed. Check your connection and try again.");
+      setError("Could not reach the server. Check your connection and try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -88,7 +104,7 @@ const Signup = () => {
         <div className="flex flex-col sm:flex-row gap-3">
           <motion.button
             type="button"
-            onClick={handleGoogleSignup}
+            onClick={handleGithubSignup}
             whileHover={{ scale: 1.03, y: -3 }}
             whileTap={{ scale: 0.95 }}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-400 bg-white/[0.03] py-3 text-white transition cursor-pointer hover:bg-slate-200/30 hover:border-slate-200"
@@ -98,6 +114,8 @@ const Signup = () => {
           </motion.button>
 
           <motion.button
+            type="button"
+            onClick={handleGoogleSignup}
             whileHover={{ scale: 1.03, y: -3 }}
             whileTap={{ scale: 0.95 }}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-slate-400 bg-white/[0.03] py-3 text-white transition cursor-pointer hover:bg-slate-200/30 hover:border-slate-200"
@@ -123,12 +141,15 @@ const Signup = () => {
           {/* Email */}
 
           <motion.div whileHover={{ scale: 1.02 }}>
-            <label className="block text-sm text-slate-400 mb-2">
+            <label htmlFor="signup-email" className="block text-sm text-slate-600 mb-2">
               Email Address
             </label>
 
             <input
+              id="signup-email"
               type="email"
+              autoComplete="email"
+              required
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -138,13 +159,17 @@ const Signup = () => {
           {/* Password */}
 
           <motion.div whileHover={{ scale: 1.02 }}>
-            <label className="block text-sm text-slate-400 mb-2">
-              Password
+            <label htmlFor="signup-password" className="block text-sm text-slate-600 mb-2">
+              Password <span className="text-slate-400">(at least 8 characters)</span>
             </label>
 
             <div className="relative">
               <input
+                id="signup-password"
                 type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
+                minLength={8}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -154,6 +179,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
@@ -164,13 +190,16 @@ const Signup = () => {
           {/* Confirm Password */}
 
           <motion.div whileHover={{ scale: 1.02 }}>
-            <label className="block text-sm text-slate-400 mb-2">
+            <label htmlFor="signup-confirm" className="block text-sm text-slate-600 mb-2">
               Confirm Password
             </label>
 
             <div className="relative">
               <input
+                id="signup-confirm"
                 type={showConfirmPassword ? "text" : "password"}
+                autoComplete="new-password"
+                required
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -180,6 +209,7 @@ const Signup = () => {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
@@ -198,10 +228,16 @@ const Signup = () => {
               scale: 0.95,
             }}
             type="submit"
-            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 py-3.5 font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:from-indigo-600 hover:to-purple-700"
+            disabled={submitting}
+            className="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 py-3.5 font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:from-indigo-600 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Create Account
+            {submitting ? "Creating account..." : "Create Account"}
           </motion.button>
+          {error && (
+            <p role="alert" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
         </form>
 
         {/* Footer */}

@@ -1,9 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { ExternalLink } from "lucide-react";
+import { shopifyAdminUrl } from "@/components/dashboard/products/deleteProduct";
 
-export default function InventoryHeader() {
+// Stock quantities are read-only in SmartSell, so this opens Shopify's own
+// inventory page (shown once the store is known).
+export default function InventoryHeader({ shop = null }) {
+  const inventoryUrl = shopifyAdminUrl.inventory(shop);
   return (
     <motion.div
       initial={{ opacity: 0, y: -25 }}
@@ -21,8 +25,12 @@ export default function InventoryHeader() {
         </p>
       </div>
 
-      <button
-        className="
+      {inventoryUrl && (
+        <a
+          href={inventoryUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="
         flex
         items-center
         justify-center
@@ -39,10 +47,11 @@ export default function InventoryHeader() {
         hover:scale-105
         shadow-lg
       "
-      >
-        <Plus size={18} />
-        Update Inventory
-      </button>
+        >
+          <ExternalLink size={18} aria-hidden="true" />
+          Edit stock in Shopify
+        </a>
+      )}
     </motion.div>
   );
 }

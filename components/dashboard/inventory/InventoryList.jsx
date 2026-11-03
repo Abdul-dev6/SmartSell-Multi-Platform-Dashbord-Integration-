@@ -13,7 +13,7 @@ export default function InventoryList({ inventorydata = [] }) {
     reorder: item.reorder ?? 0,
     available: item.available ?? null,
     updated: item.updated_at || "Not available",
-    image: item.image || "/user.avif",
+    image: item.image || null,
     sku: item.sku || "Not available",
     Location: item.location_name || item.location_id || "Not available",
   }));

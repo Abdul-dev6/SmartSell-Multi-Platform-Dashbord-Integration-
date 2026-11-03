@@ -1,19 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import ProductThumb from "@/components/dashboard/shared/ProductThumb";
+import RowActionsMenu from "@/components/dashboard/shared/RowActionsMenu";
+import { deleteProductWithConfirm, shopifyAdminUrl } from "@/components/dashboard/products/deleteProduct";
 
-import {
-  MoreVertical,
-  Eye,
-  Pencil,
-  Copy,
-  RefreshCcw,
-  Trash2,
-} from "lucide-react";
+export default function ListingRow({ ListingData = {}, onChanged }) {
+  const [deleteError, setDeleteError] = useState(null);
 
-export default function ListingRow({ ListingData=[] }) {
+  const handleDelete = async () => {
+    setDeleteError(null);
+    const result = await deleteProductWithConfirm({ id: ListingData.local_id, title: ListingData.title });
+    if (result.error) setDeleteError(result.error);
+    if (result.deleted) await onChanged?.();
+  };
+
 
     function formatUpdatedAt(timestamp) {
     if (!timestamp || timestamp === "Not available") {
@@ -31,7 +34,6 @@ export default function ListingRow({ ListingData=[] }) {
     });
   }
 
-  const [openMenu, setOpenMenu] = useState(false);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -79,13 +81,7 @@ export default function ListingRow({ ListingData=[] }) {
         {/* Product */}
 
         <div className="flex items-center gap-4 sm:gap-5">
-          <Image
-            src={ListingData.image}
-            alt={ListingData.title}
-            width={80}
-            height={80}
-            className="rounded-xl border object-cover"
-          />
+          <ProductThumb src={ListingData.image} alt={ListingData.title} size={80} className="rounded-xl" />
 
           <div>
             <h2 className="text-xl font-semibold text-slate-800">
@@ -152,67 +148,35 @@ export default function ListingRow({ ListingData=[] }) {
 
           {/* Action Menu */}
 
-          <div className="relative">
-            <button
-              onClick={() => setOpenMenu(!openMenu)}
-              className="
-                p-2
-                rounded-lg
-                hover:bg-slate-100
-                transition
-              "
-            >
-              <MoreVertical size={22} />
-            </button>
-
-            {openMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.2 }}
-                className="
-                  absolute
-                  right-0
-                  top-12
-                  w-64 sm:w-56
-                  bg-white
-                  rounded-xl
-                  shadow-xl
-                  border
-                  border-slate-200
-                  overflow-hidden
-                  z-50
-                "
-              >
-                <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                  <Eye size={18} />
-                  View Product
-                </button>
-
-                <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                  <Pencil size={18} />
-                  Edit Listing
-                </button>
-
-                <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                  <Copy size={18} />
-                  Duplicate
-                </button>
-
-                <button className="flex items-center gap-3 w-full px-4 py-3 hover:bg-slate-50">
-                  <RefreshCcw size={18} />
-                  Sync Shopify
-                </button>
-
-                <button className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50">
-                  <Trash2 size={18} />
-                  Delete
-                </button>
-              </motion.div>
-            )}
-          </div>
+          <RowActionsMenu
+            label={`Actions for ${ListingData.title}`}
+            items={[
+              ListingData.local_id && {
+                label: "Edit listing",
+                icon: Pencil,
+                href: `/Panel/Ecommerce/Product/${ListingData.local_id}/edit`,
+              },
+              shopifyAdminUrl.product(ListingData.shop, ListingData.product_id) && {
+                label: "View in Shopify",
+                icon: ExternalLink,
+                href: shopifyAdminUrl.product(ListingData.shop, ListingData.product_id),
+                external: true,
+              },
+              ListingData.local_id && {
+                label: "Delete from Shopify",
+                icon: Trash2,
+                onClick: handleDelete,
+                danger: true,
+              },
+            ]}
+          />
         </div>
       </div>
+      {deleteError && (
+        <p role="alert" className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {deleteError}
+        </p>
+      )}
     </motion.div>
   );
 }

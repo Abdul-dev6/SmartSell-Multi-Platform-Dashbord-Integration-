@@ -13,6 +13,20 @@ const NAV_LINKS = [
 const Navbarpage = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // Signed-in visitors get a link to the dashboard instead of Login/Sign up.
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => {
+        if (active && response.ok) setSignedIn(true);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // navbar picks up a background + shadow only after the page scrolls —
   // stays clean/transparent-ish at the very top
@@ -63,22 +77,34 @@ const Navbarpage = () => {
 
         {/* Desktop buttons */}
         <div className="hidden md:flex gap-3">
-          <Link
-            href="/Login"
-            className="px-4 py-2 rounded-lg text-slate-700 hover:text-blue-500 font-medium transition-colors hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200 "
-          >
-            Login
-          </Link>
-          <Link
-            href="/Signup"
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200"
-          >
-            Sign Up
-          </Link>
+          {signedIn ? (
+            <Link
+              href="/Panel/Dashboard"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200"
+            >
+              Open dashboard
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/Login"
+                className="px-4 py-2 rounded-lg text-slate-700 hover:text-blue-500 font-medium transition-colors hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200 "
+              >
+                Login
+              </Link>
+              <Link
+                href="/Signup"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-blue-200"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Hamburger — bars morph into an X */}
         <button
+          type="button"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
           aria-expanded={open}
@@ -132,20 +158,32 @@ const Navbarpage = () => {
           </ul>
 
           <div className="flex gap-3 pb-5 pt-1">
-            <Link
-              href="/Login"
-              onClick={() => setOpen(false)}
-              className="flex-1 text-center px-4 py-2.5 rounded-lg border border-slate-200 text-slate-700 hover:border-blue-300 hover:text-blue-500 transition-colors"
-            >
-              Login
-            </Link>
-            <Link
-              href="/Signup"
-              onClick={() => setOpen(false)}
-              className="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors"
-            >
-              Sign Up
-            </Link>
+            {signedIn ? (
+              <Link
+                href="/Panel/Dashboard"
+                onClick={() => setOpen(false)}
+                className="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors"
+              >
+                Open dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/Login"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 text-center px-4 py-2.5 rounded-lg border border-slate-200 text-slate-700 hover:border-blue-300 hover:text-blue-500 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/Signup"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 text-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

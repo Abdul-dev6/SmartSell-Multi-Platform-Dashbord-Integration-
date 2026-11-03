@@ -1,7 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+import ProductThumb from "@/components/dashboard/shared/ProductThumb";
+import { formatMoney } from "@/components/dashboard/shared/format";
+import { deleteProductWithConfirm, shopifyAdminUrl } from "@/components/dashboard/products/deleteProduct";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, Pencil, Trash2 } from "lucide-react";
@@ -25,29 +27,12 @@ export default function ProductTable({ ProductData = [], onChanged }) {
   };
 
   const handleDelete = async (item) => {
-    const confirmed = window.confirm(
-      `Delete "${item.title}" from Shopify?
-
-This permanently deletes the product (all its variants) in your Shopify store. SmartSell keeps an archived record so order history stays intact.`,
-    );
-    if (!confirmed) return;
-
     setDeletingId(item.local_id);
     setError(null);
-    try {
-      const response = await fetch(`/api/products/${item.local_id}`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ confirm: true }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.message || "Delete failed.");
-      await onChanged?.();
-    } catch (err) {
-      setError(`${item.title}: ${err.message}`);
-    } finally {
-      setDeletingId(null);
-    }
+    const result = await deleteProductWithConfirm({ id: item.local_id, title: item.title });
+    setDeletingId(null);
+    if (result.error) setError(`${item.title}: ${result.error}`);
+    if (result.deleted) await onChanged?.();
   };
 
   function StockavailabilityStatus(available) {
@@ -105,17 +90,7 @@ This permanently deletes the product (all its variants) in your Shopify store. S
             >
               <td className="px-6 py-5">
                 <div className="flex items-center gap-4">
-                  {item.image ? (
-                    <Image
-                      src={item.image}
-                      alt={item.title}
-                      width={55}
-                      height={55}
-                      className="rounded-lg border"
-                    />
-                  ) : (
-                    <div className="h-[55px] w-[55px] shrink-0 rounded-lg border bg-slate-100" aria-hidden="true" />
-                  )}
+                  <ProductThumb src={item.image} alt={item.title} />
 
                   <div>
                     <h2 className="font-semibold">{item.title}</h2>
@@ -134,7 +109,7 @@ This permanently deletes the product (all its variants) in your Shopify store. S
                 </span>
               </td>
 
-              <td>{item.price}</td>
+              <td>{formatMoney(item.price, item.currency)}</td>
 
               <td>{StockavailabilityStatus(item.available)}</td>
 
@@ -152,7 +127,7 @@ This permanently deletes the product (all its variants) in your Shopify store. S
                 <div className="flex justify-center gap-3">
                   {item.shop && item.product_id && (
                     <a
-                      href={`https://${item.shop}/admin/products/${item.product_id}`}
+                      href={shopifyAdminUrl.product(item.shop, item.product_id)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="rounded-lg bg-blue-100 p-2 hover:bg-blue-200"

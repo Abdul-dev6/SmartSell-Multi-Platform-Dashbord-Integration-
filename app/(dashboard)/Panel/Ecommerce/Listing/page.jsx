@@ -46,7 +46,7 @@ export default function ListingPage() {
         onExport={() => downloadCsv(exportFilename("smartsell-listings"), toCsv(filtered, CSV_COLUMNS))}
       />
 
-      <ListingTable ListingData={filtered} />
+      <ListingTable ListingData={filtered} onChanged={reload} />
       {ListingData.length > 0 && filtered.length === 0 && (
         <p className="mt-4 text-sm text-slate-500">No listings match your filters.</p>
       )}
