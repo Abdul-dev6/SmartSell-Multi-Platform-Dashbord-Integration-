@@ -43,7 +43,7 @@ describe("signup", () => {
     expect((await signup(jsonRequest("/api/auth/signup", { email: { $gt: "" }, password: "longenough" }))).status).toBe(400);
   });
 
-  it("rejects duplicates case-insensitively, including legacy mixed-case emails", async () => {
+  it("rejects duplicates case-insensitively (emails are stored lowercase)", async () => {
     await User.create({ email: "Legacy@Example.com", password: "x" });
     const res = await signup(jsonRequest("/api/auth/signup", { email: "legacy@example.com", password: "longenough" }));
     expect(res.status).toBe(409);
@@ -64,7 +64,7 @@ describe("login", () => {
     await User.create({ email: "Legacy@Example.com", password: await bcrypt.hash("correct-password", 10) });
   });
 
-  it("sets an httpOnly 7-day session cookie on success (legacy mixed-case email still works)", async () => {
+  it("sets an httpOnly 7-day session cookie on success (mixed-case input still matches)", async () => {
     const res = await login(jsonRequest("/api/auth/login", { email: "legacy@example.com", password: "correct-password" }));
     expect(res.status).toBe(200);
     const cookie = res.cookies.get("token");

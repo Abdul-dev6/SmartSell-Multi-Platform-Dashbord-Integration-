@@ -138,6 +138,8 @@ ProductSchema.index(
 
 // Finds writes that need retrying or reconciling.
 ProductSchema.index({ shopifyStore: 1, syncStatus: 1 });
+// Inventory webhooks look up which product owns an inventory item.
+ProductSchema.index({ shopifyStore: 1, "variants.inventoryItemId": 1 });
 
 // Matches products that exist in Shopify (excludes pending SmartSell creates).
 export const HAS_SHOPIFY_ID = { shopifyProductId: { $type: "string" } };

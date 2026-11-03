@@ -2,7 +2,7 @@ import UserSchema from "@/models/User";
 import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import { generateToken, setSessionCookie } from "@/lib/jwt";
-import { EMAIL_COLLATION, normalizeEmail, readJsonBody } from "@/lib/auth/credentials";
+import { normalizeEmail, readJsonBody } from "@/lib/auth/credentials";
 import { checkPassword, hashPassword, passwordTooLong } from "@/lib/auth/password";
 import {
   checkRateLimit,
@@ -44,7 +44,7 @@ export async function POST(req) {
       }
     }
 
-    const user = await UserSchema.findOne({ email }).collation(EMAIL_COLLATION);
+    const user = await UserSchema.findOne({ email });
 
     // Always runs a full bcrypt comparison, so an unknown email takes as long
     // to answer as a wrong password.

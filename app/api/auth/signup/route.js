@@ -2,7 +2,6 @@ import UserSchema from "@/models/User";
 import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 import {
-  EMAIL_COLLATION,
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
   isValidEmail,
@@ -61,9 +60,7 @@ export async function POST(req) {
     }
 
     // Check if user already exists
-    const existingUser = await UserSchema.findOne({ email }).collation(
-      EMAIL_COLLATION,
-    );
+    const existingUser = await UserSchema.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
         { message: "Email already registered. Please login." },
