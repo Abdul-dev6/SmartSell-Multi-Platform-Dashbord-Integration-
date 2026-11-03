@@ -29,7 +29,7 @@ export async function POST(req) {
     }
 
     const result = await createProduct(user._id, value);
-    return productResponse(result, { notSent });
+    return productResponse(result, { notSent, ...(result.partial ? { partial: result.partial } : {}) });
   } catch (error) {
     return productErrorResponse(error, "Create product", req);
   }

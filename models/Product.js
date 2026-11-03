@@ -64,6 +64,38 @@ const ProductSchema = new mongoose.Schema(
       default: [],
     },
 
+    // Shopify Standard Product Taxonomy category: { id, name, fullName } or null.
+    category: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
+    // Collections the product belongs to: [{ id, title, manual }]. Automated
+    // (smart) collections have manual: false; Shopify assigns those by rules.
+    collections: {
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
+    },
+
+    // Sales channels (publication IDs) the product is published to. Only
+    // readable with read_publications; publishedOnKnown says whether it was.
+    publishedOn: {
+      type: [String],
+      default: [],
+    },
+    publishedOnKnown: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Shipping fields per variant ID: { requiresShipping, weight, weightUnit,
+    // countryCodeOfOrigin, harmonizedSystemCode }. Kept apart from `variants`
+    // because product webhooks replace variants without these fields.
+    variantShipping: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+
     rawData: {
       type: mongoose.Schema.Types.Mixed,
     },

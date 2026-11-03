@@ -163,13 +163,15 @@ describe("POST /api/shopify/webhooks", () => {
     const { user, shop } = await newStore();
     const value = validateProductInput({ idempotencyKey: "key-webhook-02", title: "Mug", price: "1" }, { mode: "create" }).value;
     const { product } = await createProduct(user._id, value);
-    const mutationsBefore = shopify.current.state.mutations.length;
+    // Webhooks re-read the product ("read"); nothing may be written back.
+    const writes = () => shopify.current.state.mutations.filter((m) => m !== "read").length;
+    const mutationsBefore = writes();
 
     const echo = shopify.current.state.products[0];
     await webhook(delivery({ shop, topic: "products/create", payload: echo }));
     await webhook(delivery({ shop, topic: "products/update", payload: echo }));
 
-    expect(shopify.current.state.mutations.length).toBe(mutationsBefore); // nothing sent back to Shopify
+    expect(writes()).toBe(mutationsBefore); // nothing sent back to Shopify
     expect(await Product.countDocuments()).toBe(1);
     expect((await Product.findById(product._id).lean()).origin).toBe("smartsell");
   });

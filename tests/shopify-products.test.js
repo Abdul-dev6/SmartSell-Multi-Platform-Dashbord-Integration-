@@ -38,9 +38,10 @@ describe("GraphQL product reads", () => {
       updated_at: "2026-11-01T00:00:00Z",
       images: [{ id: "555", src: "https://cdn.shopify.com/m.png", alt: "Front" }],
     });
+    const noShipping = { requires_shipping: null, weight: null, weight_unit: null, country_code_of_origin: null, harmonized_system_code: null };
     expect(rest.variants).toEqual([
-      { id: "9", title: "Default", sku: "M-1", barcode: null, price: "5.00", compare_at_price: null, inventory_item_id: "77", inventory_management: "shopify", inventory_policy: "deny", position: 1 },
-      { id: "10", title: "Big", sku: "M-2", barcode: null, price: "7.00", compare_at_price: "9.00", inventory_item_id: "78", inventory_management: null, inventory_policy: "continue", position: 2 },
+      { id: "9", title: "Default", sku: "M-1", barcode: null, price: "5.00", compare_at_price: null, inventory_item_id: "77", inventory_management: "shopify", inventory_policy: "deny", position: 1, ...noShipping },
+      { id: "10", title: "Big", sku: "M-2", barcode: null, price: "7.00", compare_at_price: "9.00", inventory_item_id: "78", inventory_management: null, inventory_policy: "continue", position: 2, ...noShipping },
     ]);
   });
 

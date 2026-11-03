@@ -1,5 +1,6 @@
 // REST-shaped fixture -> GraphQL Product node, as the Admin API returns it.
-export function toGraphqlProduct(p) {
+// `publications`: the query asked for resourcePublicationsV2.
+export function toGraphqlProduct(p, { publications = false } = {}) {
   return {
     legacyResourceId: String(p.id),
     title: p.title,
@@ -10,6 +11,19 @@ export function toGraphqlProduct(p) {
     status: p.status ? String(p.status).toUpperCase() : null,
     tags: p.tags ? String(p.tags).split(",").map((t) => t.trim()).filter(Boolean) : [],
     updatedAt: p.updated_at,
+    category: p.category ? { id: p.category.admin_graphql_api_id, name: p.category.name, fullName: p.category.full_name } : null,
+    collections: {
+      pageInfo: { hasNextPage: false, endCursor: null },
+      nodes: (p.collections || []).map((c) => ({ id: c.id, title: c.title, ruleSet: c.manual === false ? { appliedDisjunctively: false } : null })),
+    },
+    ...(publications
+      ? {
+          resourcePublicationsV2: {
+            pageInfo: { hasNextPage: false, endCursor: null },
+            nodes: (p.published_publication_ids || []).map((id) => ({ publication: { id } })),
+          },
+        }
+      : {}),
     variants: {
       pageInfo: { hasNextPage: false, endCursor: null },
       nodes: (p.variants || []).map((v) => ({
@@ -21,7 +35,16 @@ export function toGraphqlProduct(p) {
         compareAtPrice: v.compare_at_price ?? null,
         inventoryPolicy: "DENY",
         position: v.position ?? 1,
-        inventoryItem: v.inventory_item_id ? { legacyResourceId: String(v.inventory_item_id), tracked: true } : null,
+        inventoryItem: v.inventory_item_id
+          ? {
+              legacyResourceId: String(v.inventory_item_id),
+              tracked: true,
+              requiresShipping: v.requires_shipping ?? true,
+              countryCodeOfOrigin: v.country_code_of_origin ?? null,
+              harmonizedSystemCode: v.harmonized_system_code ?? null,
+              measurement: { weight: { unit: v.weight_unit || "KILOGRAMS", value: v.weight ?? 0 } },
+            }
+          : null,
       })),
     },
     media: {
@@ -46,7 +69,7 @@ export function answerProductQuery(products, body, pageSize = 50) {
         data: {
           products: {
             pageInfo: { hasNextPage, endCursor: hasNextPage ? String(start + pageSize) : null },
-            nodes: slice.map(toGraphqlProduct),
+            nodes: slice.map((x) => toGraphqlProduct(x, { publications: q.includes("resourcePublicationsV2") })),
           },
         },
       },
@@ -55,7 +78,7 @@ export function answerProductQuery(products, body, pageSize = 50) {
   if (q.includes("SmartSellProduct(")) {
     const id = String(body.variables.id).split("/").pop();
     const p = products.find((x) => String(x.id) === id);
-    return { data: { data: { product: p ? toGraphqlProduct(p) : null } } };
+    return { data: { data: { product: p ? toGraphqlProduct(p, { publications: q.includes("resourcePublicationsV2") }) : null } } };
   }
   return null;
 }
@@ -176,9 +199,51 @@ export function shopifyOrder(id, overrides = {}) {
 // lib/products/service.js. `failNext` makes the next matching call fail:
 //   { productSet: "userErrors" | "timeout" | "http500" | "throttled" | "accessDenied" | "lostResponse", ... }
 // "lostResponse" applies the change in Shopify but loses the response.
-export function fakeShopifyStore({ products = [] } = {}) {
+export const FAKE_TAXONOMY = [
+  { id: "gid://shopify/TaxonomyCategory/hg-11-10-12", name: "Mugs", fullName: "Home & Garden > Kitchen & Dining > Tableware > Drinkware > Mugs", isLeaf: true, isArchived: false },
+  { id: "gid://shopify/TaxonomyCategory/hg-11-10-99", name: "Mug Trees", fullName: "Home & Garden > Kitchen & Dining > Mug Trees", isLeaf: true, isArchived: false },
+  { id: "gid://shopify/TaxonomyCategory/old-1", name: "Mugs (old)", fullName: "Retired > Mugs", isLeaf: true, isArchived: true },
+];
+export const FAKE_COLLECTIONS = [
+  { id: "gid://shopify/Collection/1", title: "Summer", handle: "summer", manual: true },
+  { id: "gid://shopify/Collection/2", title: "Kitchen", handle: "kitchen", manual: true },
+  { id: "gid://shopify/Collection/3", title: "On sale (auto)", handle: "on-sale", manual: false },
+];
+export const FAKE_PUBLICATIONS = [
+  { id: "gid://shopify/Publication/11", title: "Online Store" },
+  { id: "gid://shopify/Publication/12", title: "Point of Sale" },
+];
+
+export function fakeShopifyStore({ products = [], collections = FAKE_COLLECTIONS, publications = FAKE_PUBLICATIONS, taxonomy = FAKE_TAXONOMY } = {}) {
   const base = fakeShopify({ products });
-  const state = { products: [...products], nextId: 9000, clock: Date.parse("2026-10-20T00:00:00Z"), failNext: {}, mutations: [] };
+  const state = {
+    products: [...products],
+    nextId: 9000,
+    clock: Date.parse("2026-10-20T00:00:00Z"),
+    failNext: {},
+    mutations: [],
+    collections: [...collections],
+    publications: [...publications],
+    taxonomy: [...taxonomy],
+    // Variables of each mutation, by name, for assertions.
+    inputs: {},
+  };
+  const categoryById = (id) => {
+    const c = state.taxonomy.find((t) => t.id === id);
+    return c ? { admin_graphql_api_id: c.id, name: c.name, full_name: c.fullName } : null;
+  };
+  const collectionById = (id) => state.collections.find((c) => c.id === id);
+  const applyInventoryItem = (variant, item = {}) => {
+    if (item.sku !== undefined) variant.sku = item.sku;
+    if (item.requiresShipping !== undefined) variant.requires_shipping = item.requiresShipping;
+    if (item.measurement?.weight) {
+      variant.weight = item.measurement.weight.value;
+      variant.weight_unit = item.measurement.weight.unit;
+    }
+    if (item.harmonizedSystemCode !== undefined) variant.harmonized_system_code = item.harmonizedSystemCode;
+    if (item.countryCodeOfOrigin !== undefined) variant.country_code_of_origin = item.countryCodeOfOrigin;
+  };
+  const userError = (name, message) => ({ [name]: { userErrors: [{ field: ["id"], message }] } });
   const tick = () => new Date((state.clock += 1000)).toISOString();
   const httpError = (status) => Object.assign(new Error(`HTTP ${status}`), { response: { status, headers: {} } });
   const find = (gid) => state.products.find((p) => `gid://shopify/Product/${p.id}` === gid);
@@ -206,10 +271,14 @@ export function fakeShopifyStore({ products = [] } = {}) {
         handle: input.handle || `p-${id}`,
         updated_at: tick(),
         created_at: new Date(state.clock).toISOString(),
-        variants: [{ id: id * 10, title: "Default Title", price: v.price, compare_at_price: v.compareAtPrice ?? null, sku: v.sku || "", barcode: v.barcode || null, inventory_item_id: id * 100, position: 1 }],
+        variants: [{ id: id * 10, title: "Default Title", price: v.price, compare_at_price: v.compareAtPrice ?? null, sku: v.sku || "", barcode: v.barcode || null, inventory_item_id: id * 100, position: 1, requires_shipping: true, weight: 0, weight_unit: "KILOGRAMS" }],
         images: [],
         metafield: input.metafields?.[0]?.value,
+        category: input.category ? categoryById(input.category) : null,
+        collections: (input.collections || []).map((cid) => ({ ...collectionById(cid) })),
+        published_publication_ids: [],
       });
+      applyInventoryItem(state.products.at(-1).variants[0], v.inventoryItem);
       return { productSet: { product: { id: `gid://shopify/Product/${id}` }, userErrors: [] } };
     }
     if (name === "productUpdate") {
@@ -221,6 +290,14 @@ export function fakeShopifyStore({ products = [] } = {}) {
       if (f.status !== undefined) p.status = f.status.toLowerCase();
       if (f.vendor !== undefined) p.vendor = f.vendor;
       if (f.tags !== undefined) p.tags = f.tags.join(", ");
+      if (f.category !== undefined) p.category = f.category ? categoryById(f.category) : null;
+      for (const cid of f.collectionsToJoin || []) {
+        const c = collectionById(cid);
+        if (!c) return { productUpdate: { product: null, userErrors: [{ field: ["collectionsToJoin"], message: "Collection does not exist" }] } };
+        if (!c.manual) return { productUpdate: { product: null, userErrors: [{ field: ["collectionsToJoin"], message: "Can't add products to a smart collection" }] } };
+        p.collections = [...(p.collections || []), { ...c }];
+      }
+      if (f.collectionsToLeave?.length) p.collections = (p.collections || []).filter((c) => !f.collectionsToLeave.includes(c.id));
       p.updated_at = tick();
       return { productUpdate: { product: { id: f.id }, userErrors: [] } };
     }
@@ -230,10 +307,23 @@ export function fakeShopifyStore({ products = [] } = {}) {
       const variant = p.variants.find((x) => `gid://shopify/ProductVariant/${x.id}` === v.id);
       if (v.price !== undefined) variant.price = v.price;
       if (v.compareAtPrice !== undefined) variant.compare_at_price = v.compareAtPrice;
-      if (v.inventoryItem?.sku !== undefined) variant.sku = v.inventoryItem.sku;
+      applyInventoryItem(variant, v.inventoryItem);
       if (v.barcode !== undefined) variant.barcode = v.barcode;
       p.updated_at = tick();
       return { productVariantsBulkUpdate: { productVariants: [{ id: v.id }], userErrors: [] } };
+    }
+    if (name === "publishablePublish" || name === "publishableUnpublish") {
+      const p = find(variables.id);
+      if (!p) return userError(name, "Resource does not exist");
+      const ids = variables.input.map((i) => i.publicationId);
+      if (ids.some((id) => !state.publications.some((x) => x.id === id))) return userError(name, "Publication does not exist or is not publishable");
+      const current = new Set(p.published_publication_ids || []);
+      for (const id of ids) {
+        if (name === "publishablePublish") current.add(id);
+        else current.delete(id);
+      }
+      p.published_publication_ids = [...current];
+      return { [name]: { userErrors: [] } };
     }
     if (name === "productDelete") {
       const p = find(variables.input.id);
@@ -270,13 +360,54 @@ export function fakeShopifyStore({ products = [] } = {}) {
       return base.get(url, options);
     },
     async post(url, body) {
+      const q = body.query;
+      if (/query SmartSell(Categories|Collections|Publications)\b/.test(q)) {
+        const op = q.match(/query SmartSell(Categories|Collections|Publications)\b/)[1];
+        state.mutations.push(`read:${op}`);
+        const mode = failure(op);
+        if (mode === "accessDenied") return { data: { errors: [{ message: "Access denied", extensions: { code: "ACCESS_DENIED" } }] } };
+        if (mode === "http500") throw httpError(500);
+        const v = body.variables || {};
+        if (op === "Categories") {
+          const term = v.search.toLowerCase();
+          return { data: { data: { taxonomy: { categories: { nodes: state.taxonomy.filter((c) => c.name.toLowerCase().includes(term)).slice(0, v.first) } } } } };
+        }
+        if (op === "Collections") {
+          const words = (v.query || "").split(" ").filter(Boolean).map((w) => w.replace(/^title:/, "").replace(/\*$/, "").toLowerCase());
+          const matching = state.collections.filter((c) => words.every((w) => c.title.toLowerCase().split(/\W+/).some((t) => t.startsWith(w))));
+          const start = Number(v.after || 0);
+          const slice = matching.slice(start, start + v.first);
+          const hasNextPage = start + v.first < matching.length;
+          return {
+            data: {
+              data: {
+                collections: {
+                  pageInfo: { hasNextPage, endCursor: hasNextPage ? String(start + v.first) : null },
+                  nodes: slice.map((c) => ({ id: c.id, title: c.title, handle: c.handle, ruleSet: c.manual ? null : { appliedDisjunctively: false } })),
+                },
+              },
+            },
+          };
+        }
+        return {
+          data: {
+            data: {
+              publications: {
+                pageInfo: { hasNextPage: false, endCursor: null },
+                nodes: state.publications.map((x) => ({ id: x.id, catalog: { title: x.title } })),
+              },
+            },
+          },
+        };
+      }
       const read = answerProductQuery(state.products, body);
       if (read) {
         state.mutations.push("read");
         return read;
       }
-      const name = body.query.match(/(productSet|productUpdate|productVariantsBulkUpdate|productDelete|products)\(/)?.[1];
+      const name = body.query.match(/(productSet|productUpdate|productVariantsBulkUpdate|productDelete|publishablePublish|publishableUnpublish|products)\(/)?.[1];
       state.mutations.push(name);
+      state.inputs[name] = [...(state.inputs[name] || []), body.variables];
       const mode = failure(name);
       if (mode === "timeout") throw Object.assign(new Error("timeout"), { code: "ECONNABORTED" });
       if (mode === "http500") throw httpError(500);

@@ -13,57 +13,7 @@ import Shipping from "@/components/dashboard/listing-form/Shipping";
 import Seo from "@/components/dashboard/listing-form/Seo";
 import ActionButtons from "@/components/dashboard/listing-form/ActionButtons";
 import { apiErrorText } from "@/components/dashboard/shared/apiError";
-
-const EMPTY_FORM = {
-  // General
-  title: "",
-  description: "",
-  vendor: "",
-  productType: "",
-  tags: "",
-
-  // Organization
-  status: "active",
-  collection: "",
-  category: "",
-  salesChannel: "shopify",
-  visibility: "online",
-
-  // Media
-  images: [],
-
-  // Pricing
-  price: "",
-  comparePrice: "",
-  cost: "",
-
-  // Inventory
-  sku: "",
-  barcode: "",
-  trackInventory: true,
-  continueSelling: false,
-
-  // Shipping
-  physicalProduct: true,
-  weight: "",
-  length: "",
-  width: "",
-  height: "",
-  hsCode: "",
-
-  // SEO
-  seoTitle: "",
-  seoDescription: "",
-  handle: "",
-};
-
-// Fields sent to the API. The server decides what reaches Shopify and
-// reports anything it could not send.
-const SENDABLE = [
-  "title", "description", "vendor", "productType", "tags", "status",
-  "price", "comparePrice", "cost", "sku", "barcode", "trackInventory",
-  "continueSelling", "seoTitle", "seoDescription", "handle",
-];
+import { EMPTY_FORM, buildProductPayload, formFromProduct } from "@/components/dashboard/listing-form/payload";
 
 const FIELD_LABELS = {
   title: "Product title",
@@ -79,26 +29,17 @@ const FIELD_LABELS = {
   seoTitle: "SEO title",
   seoDescription: "SEO description",
   handle: "URL handle",
+  category: "Category",
+  collections: "Collections",
+  publications: "Sales channels",
+  requiresShipping: "Physical product",
+  weight: "Weight",
+  weightUnit: "Weight unit",
+  countryOfOrigin: "Country of origin",
+  hsCode: "HS code",
   idempotencyKey: "Request",
   _form: "Form",
 };
-
-function formFromProduct(product) {
-  return {
-    ...EMPTY_FORM,
-    title: product.title || "",
-    description: product.description || "",
-    vendor: product.vendor || "",
-    productType: product.productType || "",
-    tags: (product.tags || []).join(", "),
-    status: product.status || "draft",
-    price: product.price ?? "",
-    comparePrice: product.comparePrice ?? "",
-    sku: product.sku ?? "",
-    barcode: product.barcode ?? "",
-    handle: product.handle || "",
-  };
-}
 
 function newRequestKey() {
   return typeof crypto !== "undefined" && crypto.randomUUID
@@ -147,16 +88,18 @@ export default function CreateListingForm({ product = null }) {
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState(null);
   const [saved, setSaved] = useState(null);
+  // null while loading; true when sales channels can be read and changed.
+  const [channelsAvailable, setChannelsAvailable] = useState(null);
+  const multiVariant = isEdit && product.variantCount > 1;
 
-  const buildPayload = (statusOverride) => {
-    const keys = isEdit
-      ? SENDABLE.filter((key) => String(formData[key] ?? "") !== String(baseline[key] ?? ""))
-      : SENDABLE;
-    const payload = Object.fromEntries(keys.map((key) => [key, formData[key]]));
-    if (statusOverride) payload.status = statusOverride;
-    if (!isEdit) payload.idempotencyKey = requestKey;
-    return payload;
-  };
+  const buildPayload = (statusOverride) =>
+    buildProductPayload(formData, baseline, {
+      isEdit,
+      channelsAvailable: channelsAvailable === true,
+      shippingEditable: !multiVariant,
+      statusOverride,
+      idempotencyKey: requestKey,
+    });
 
   // Uploads the queued images one at a time; a failed image does not stop
   // the others. Returns { uploaded, failed: [message] }.
@@ -210,7 +153,7 @@ export default function CreateListingForm({ product = null }) {
 
       if (response.ok) {
         const imageResults = hasImages ? await uploadImages(data.product.id) : null;
-        setSaved({ product: data.product, notSent: data.notSent || [], imageResults });
+        setSaved({ product: data.product, notSent: data.notSent || [], imageResults, partial: data.partial || null });
         if (isEdit) {
           const fresh = formFromProduct(data.product);
           setBaseline(fresh);
@@ -268,10 +211,14 @@ export default function CreateListingForm({ product = null }) {
           “{saved.product?.title}” was created in Shopify
           {saved.product?.status === "draft" ? " as a draft" : ""}.
         </h2>
-        {saved.notSent.length > 0 && (
+        {saved.partial === "publications" && (
           <p className="mt-2 text-sm text-amber-800">
-            Not sent to Shopify: {saved.notSent.join(", ")}. Set these in Shopify admin.
+            The product was created, but its sales channels could not be updated. Retry it from the product list
+            (Needs attention).
           </p>
+        )}
+        {saved.notSent.length > 0 && (
+          <p className="mt-2 text-sm text-amber-800">Not saved to Shopify by SmartSell: {saved.notSent.join(", ")}.</p>
         )}
         <ImageResults results={saved.imageResults} />
         <div className="mt-4 flex flex-wrap gap-3 text-sm font-medium">
@@ -293,9 +240,10 @@ export default function CreateListingForm({ product = null }) {
       {/* Left */}
 
       <div className="xl:col-span-2 space-y-6">
-        {isEdit && product.variantCount > 1 && (
+        {multiVariant && (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            This product has {product.variantCount} variants. Price, SKU and barcode are managed per variant in Shopify; other fields can be edited here.
+            This product has {product.variantCount} variants. Price, SKU, barcode and shipping differ per variant and are
+            not edited by this form; everything else is.
           </p>
         )}
 
@@ -311,7 +259,10 @@ export default function CreateListingForm({ product = null }) {
 
         <InventoryFields {...sectionProps} />
 
-        <Shipping formData={formData} setFormData={setFormData} />
+        <Shipping
+          {...sectionProps}
+          disabledReason={multiVariant ? "Shipping details differ per variant for this product and are not edited here." : null}
+        />
 
         <Seo {...sectionProps} />
 
@@ -320,7 +271,7 @@ export default function CreateListingForm({ product = null }) {
             {saved && isEdit && !message && (
               <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
                 Changes saved to Shopify.
-                {saved.notSent.length > 0 && ` Not sent: ${saved.notSent.join(", ")}.`}
+                {saved.notSent.length > 0 && ` Not saved by SmartSell: ${saved.notSent.join(", ")}.`}
               </p>
             )}
             {saved && isEdit && !message && saved.imageResults && (
@@ -379,7 +330,7 @@ export default function CreateListingForm({ product = null }) {
       {/* Right */}
 
       <div className="space-y-6">
-        <Organization {...sectionProps} />
+        <Organization {...sectionProps} onChannelsAvailability={setChannelsAvailable} />
       </div>
     </div>
   );
