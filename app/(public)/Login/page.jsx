@@ -15,6 +15,8 @@ const NOTICES = {
   github_email_required: "GitHub did not share an email address. Make your GitHub email visible, or use another sign-in method.",
   google_login_failed: "Google sign-in failed. Please try again.",
   github_login_failed: "GitHub sign-in failed. Please try again.",
+  google_email_unverified: "Your Google account's email address is not verified. Verify it with Google, or sign in with your password.",
+  github_email_unverified: "Your GitHub email address is not verified. Verify it in GitHub settings (Emails), or sign in with your password.",
 };
 
 // Reads ?error= / ?registered= from the URL. Only this part waits for the URL
