@@ -17,6 +17,11 @@ export default function NeedsAttention({ items = [], onChanged }) {
     try {
       const response = await fetch(`/api/products/${item.id}/retry`, { method: "POST" });
       const data = await response.json().catch(() => ({}));
+      // Deleted in Shopify: SmartSell archived it, so the item is resolved.
+      if (data.code === "deleted_in_shopify") {
+        await onChanged?.();
+        return;
+      }
       if (!response.ok) throw new Error(data.message || "Retry failed.");
       await onChanged?.();
     } catch (error) {
