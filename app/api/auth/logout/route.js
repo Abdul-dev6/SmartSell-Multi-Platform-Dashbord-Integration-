@@ -1,25 +1,6 @@
-import { NextResponse } from "next/server";
-import { clearSessionCookie } from "@/lib/jwt";
+import { signedOutResponse } from "@/lib/auth/signOut";
 
-// NextAuth's own session cookies (used only during Google/GitHub sign-in).
-const NEXTAUTH_COOKIES = [
-  ["authjs.session-token", false],
-  ["__Secure-authjs.session-token", true],
-];
-
+// Signs out this browser only (see /api/auth/logout-all for every device).
 export async function POST() {
-  const response = NextResponse.json({ success: true });
-  clearSessionCookie(response);
-
-  for (const [name, secure] of NEXTAUTH_COOKIES) {
-    response.cookies.set(name, "", {
-      httpOnly: true,
-      secure,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
-  }
-
-  return response;
+  return signedOutResponse();
 }

@@ -8,6 +8,7 @@ import { deleteProduct, toClientProduct, updateProduct } from "@/lib/products/se
 import {
   productErrorResponse,
   productResponse,
+  productWriteLimit,
   validationErrorResponse,
 } from "@/lib/products/http";
 
@@ -37,6 +38,8 @@ export async function PATCH(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
+    const limited = await productWriteLimit(user._id);
+    if (limited) return limited;
 
     const { id } = await params;
     const { value, errors, notSent } = validateProductInput(await readJsonBody(req), {
@@ -62,6 +65,8 @@ export async function DELETE(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
+    const limited = await productWriteLimit(user._id);
+    if (limited) return limited;
 
     const body = await readJsonBody(req);
     if (body?.confirm !== true) {

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
@@ -9,6 +9,51 @@ function initials(name, email) {
   const source = (name || email || "?").trim();
   const parts = source.split(/\s+/).filter(Boolean);
   return (parts.length > 1 ? parts[0][0] + parts[1][0] : source.slice(0, 2)).toUpperCase();
+}
+
+// Ends every session of this account, on all devices, then returns to Login.
+function SignOutEverywhere() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  const run = async () => {
+    if (!window.confirm("Sign out of SmartSell on every device, including this one?")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/logout-all", { method: "POST" });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "Could not sign out other devices.");
+      }
+      window.location.assign("/Login");
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <h2 className="text-xl font-semibold text-slate-900 mb-2">Security</h2>
+      <p className="text-sm text-slate-600 mb-4">
+        Lost a device or signed in on a shared computer? This ends every SmartSell session for your account.
+      </p>
+      <button
+        type="button"
+        onClick={run}
+        disabled={busy}
+        className="rounded-xl border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
+      >
+        {busy ? "Signing out…" : "Sign out everywhere"}
+      </button>
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+    </div>
+  );
 }
 
 // Shows only what SmartSell actually stores about the account.
@@ -93,6 +138,8 @@ const Userprofile = () => {
               </p>
             )}
           </div>
+
+          <SignOutEverywhere />
         </>
       )}
     </div>

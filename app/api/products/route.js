@@ -5,6 +5,7 @@ import { createProduct } from "@/lib/products/service";
 import {
   productErrorResponse,
   productResponse,
+  productWriteLimit,
   validationErrorResponse,
 } from "@/lib/products/http";
 
@@ -17,6 +18,8 @@ export async function POST(req) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
+    const limited = await productWriteLimit(user._id);
+    if (limited) return limited;
 
     const { value, errors, notSent } = validateProductInput(await readJsonBody(req), {
       mode: "create",

@@ -1,6 +1,6 @@
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { retryProduct } from "@/lib/products/service";
-import { productErrorResponse, productResponse } from "@/lib/products/http";
+import { productErrorResponse, productResponse, productWriteLimit } from "@/lib/products/http";
 
 export const maxDuration = 30;
 
@@ -9,6 +9,8 @@ export async function POST(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
+    const limited = await productWriteLimit(user._id);
+    if (limited) return limited;
 
     const { id } = await params;
     return productResponse(await retryProduct(user._id, id));

@@ -1,19 +1,17 @@
 import UserSchema from "@/models/User";
 import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { generateToken, setSessionCookie } from "@/lib/jwt";
-import {
-  EMAIL_COLLATION,
-  MAX_PASSWORD_LENGTH,
-  normalizeEmail,
-  readJsonBody,
-} from "@/lib/auth/credentials";
+import { EMAIL_COLLATION, normalizeEmail, readJsonBody } from "@/lib/auth/credentials";
+import { checkPassword, hashPassword, passwordTooLong } from "@/lib/auth/password";
 import {
   checkRateLimit,
   getClientIp,
   rateLimitedResponse,
 } from "@/lib/rateLimit";
+
+const invalidCredentials = () =>
+  NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
 
 export async function POST(req) {
   const body = await readJsonBody(req);
@@ -27,47 +25,47 @@ export async function POST(req) {
     );
   }
 
-  if (password.length > MAX_PASSWORD_LENGTH) {
-    return NextResponse.json(
-      { message: "Invalid email or password" },
-      { status: 401 },
-    );
+  if (passwordTooLong(password)) {
+    return invalidCredentials();
   }
 
   try {
     await connectDB();
 
-    const limit = await checkRateLimit(`login:${getClientIp(req)}:${email}`, {
-      limit: 10,
-      windowSeconds: 15 * 60,
-    });
-    if (!limit.allowed) {
-      return rateLimitedResponse(NextResponse, limit.retryAfter);
+    // Per address and IP (stops one client hammering an account) and per
+    // address alone (caps guessing spread across many IPs).
+    for (const [key, limit, windowSeconds] of [
+      [`login:${getClientIp(req)}:${email}`, 10, 15 * 60],
+      [`login-email:${email}`, 30, 60 * 60],
+    ]) {
+      const result = await checkRateLimit(key, { limit, windowSeconds });
+      if (!result.allowed) {
+        return rateLimitedResponse(NextResponse, result.retryAfter);
+      }
     }
 
     const user = await UserSchema.findOne({ email }).collation(EMAIL_COLLATION);
 
-    if (!user) {
-      return NextResponse.json(
-        { message: "Invalid email or password" },
-        { status: 401 },
-      );
-    }
+    // Always runs a full bcrypt comparison, so an unknown email takes as long
+    // to answer as a wrong password.
+    const { ok, needsRehash } = await checkPassword(password, user?.password);
 
-    if (!user.password) {
+    if (user && !user.password) {
       return NextResponse.json(
         { message: "This account uses Google or GitHub sign-in" },
         { status: 401 },
       );
     }
+    if (!user || !ok) {
+      return invalidCredentials();
+    }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { message: "Invalid email or password" },
-        { status: 401 },
-      );
+    if (needsRehash) {
+      // Upgrade older, cheaper hashes now that the password is known.
+      await UserSchema.updateOne(
+        { _id: user._id, password: user.password },
+        { $set: { password: await hashPassword(password) } },
+      ).catch((error) => console.error("Password rehash failed:", error.name));
     }
 
     const res = NextResponse.json(

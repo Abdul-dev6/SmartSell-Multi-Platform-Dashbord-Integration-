@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { MAX_IMAGE_BYTES, uploadProductImage } from "@/lib/products/images";
-import { productErrorResponse } from "@/lib/products/http";
+import { productErrorResponse, productWriteLimit } from "@/lib/products/http";
 import { toClientProduct } from "@/lib/products/service";
 
 export const maxDuration = 60;
@@ -12,6 +12,8 @@ export async function POST(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
+    const limited = await productWriteLimit(user._id);
+    if (limited) return limited;
 
     if (Number(req.headers.get("content-length") || 0) > MAX_IMAGE_BYTES + 64 * 1024) {
       return NextResponse.json(

@@ -1,7 +1,6 @@
 import UserSchema from "@/models/User";
 import connectDB from "@/lib/mongodb";
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import {
   EMAIL_COLLATION,
   MAX_PASSWORD_LENGTH,
@@ -10,6 +9,7 @@ import {
   normalizeEmail,
   readJsonBody,
 } from "@/lib/auth/credentials";
+import { hashPassword, passwordTooLong } from "@/lib/auth/password";
 import {
   checkRateLimit,
   getClientIp,
@@ -37,7 +37,9 @@ export async function POST(req) {
 
   if (
     password.length < MIN_PASSWORD_LENGTH ||
-    password.length > MAX_PASSWORD_LENGTH
+    password.length > MAX_PASSWORD_LENGTH ||
+    // bcrypt reads 72 bytes; accented letters and emoji take several each.
+    passwordTooLong(password)
   ) {
     return NextResponse.json(
       {
@@ -70,7 +72,7 @@ export async function POST(req) {
     }
 
     // Hash password before saving
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     await UserSchema.create({
       email,

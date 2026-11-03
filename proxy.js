@@ -2,11 +2,25 @@ import { NextResponse } from "next/server";
 import { clearSessionCookie, SESSION_COOKIE } from "./lib/jwt";
 import { DEFAULT_AFTER_LOGIN } from "./lib/auth/nextPath";
 import { sessionStatus } from "./lib/auth/sessionStatus";
+import { isCrossSiteRequest } from "./lib/security/csrf";
 
 const AUTH_PAGES = ["/Login", "/Signup"];
 
 export async function proxy(req) {
   const { pathname, search } = req.nextUrl;
+
+  // API routes authenticate themselves; here they only get the cross-site
+  // check for state-changing requests (no session lookup).
+  if (pathname.startsWith("/api/")) {
+    if (isCrossSiteRequest(req)) {
+      return NextResponse.json(
+        { success: false, code: "cross_site_request", message: "Request blocked." },
+        { status: 403 },
+      );
+    }
+    return NextResponse.next();
+  }
+
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   const status = await sessionStatus(token);
 
@@ -33,5 +47,5 @@ export async function proxy(req) {
 }
 
 export const config = {
-  matcher: ["/Panel/:path*", "/Login", "/Signup"],
+  matcher: ["/Panel/:path*", "/Login", "/Signup", "/api/:path*"],
 };
