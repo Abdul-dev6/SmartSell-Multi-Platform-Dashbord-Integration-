@@ -29,7 +29,7 @@ export async function GET(req, { params }) {
 
     return NextResponse.json({ success: true, product: toClientProduct(product) });
   } catch (error) {
-    return productErrorResponse(error, "Get product");
+    return productErrorResponse(error, "Get product", req);
   }
 }
 
@@ -55,7 +55,7 @@ export async function PATCH(req, { params }) {
 
     return productResponse(await updateProduct(user._id, id, value), { notSent });
   } catch (error) {
-    return productErrorResponse(error, "Update product");
+    return productErrorResponse(error, "Update product", req);
   }
 }
 
@@ -80,6 +80,6 @@ export async function DELETE(req, { params }) {
     const result = await deleteProduct(user._id, id);
     return productResponse(result, result.alreadyDeleted ? { alreadyDeleted: true } : {});
   } catch (error) {
-    return productErrorResponse(error, "Delete product");
+    return productErrorResponse(error, "Delete product", req);
   }
 }

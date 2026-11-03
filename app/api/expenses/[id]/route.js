@@ -4,6 +4,7 @@ import Expense from "@/models/Expense";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { toClientExpense, validateExpense } from "@/lib/expenses";
+import { logError } from "@/lib/observability/log";
 
 const notFound = () =>
   NextResponse.json({ success: false, message: "Expense not found." }, { status: 404 });
@@ -35,7 +36,7 @@ export async function PATCH(req, { params }) {
     if (!doc) return notFound();
     return NextResponse.json({ success: true, expense: toClientExpense(doc) });
   } catch (error) {
-    console.error("Update expense error:", error.name, error.message);
+    logError(req, "Update expense error", error);
     return NextResponse.json({ success: false, message: "Could not update the expense." }, { status: 500 });
   }
 }
@@ -52,7 +53,7 @@ export async function DELETE(req, { params }) {
     if (!result.deletedCount) return notFound();
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete expense error:", error.name, error.message);
+    logError(req, "Delete expense error", error);
     return NextResponse.json({ success: false, message: "Could not delete the expense." }, { status: 500 });
   }
 }

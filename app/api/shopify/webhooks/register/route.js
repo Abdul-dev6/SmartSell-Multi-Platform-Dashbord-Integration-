@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { getActiveStores } from "@/lib/catalog";
 import { getWebhookCallbackUrl, registerStoreWebhooks } from "@/lib/shopify/webhookRegistration";
+import { logError } from "@/lib/observability/log";
 
 export const maxDuration = 30;
 
@@ -39,7 +40,7 @@ export async function POST(req) {
       { status: allActive ? 200 : 502 },
     );
   } catch (error) {
-    console.error("Webhook register route error:", error.name, error.message);
+    logError(req, "Webhook register route error", error);
     return NextResponse.json({ success: false, message: "Could not set up live updates." }, { status: 500 });
   }
 }

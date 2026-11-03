@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { getActiveStores } from "@/lib/catalog";
 import { EXPENSE_CATEGORIES, toClientExpense, validateExpense } from "@/lib/expenses";
+import { logError } from "@/lib/observability/log";
 
 const MAX_RESULTS = 500;
 
@@ -37,7 +38,7 @@ export async function GET(req) {
       categories: EXPENSE_CATEGORIES,
     });
   } catch (error) {
-    console.error("List expenses error:", error.name, error.message);
+    logError(req, "List expenses error", error);
     return NextResponse.json({ success: false, message: "Could not load expenses." }, { status: 500 });
   }
 }
@@ -62,7 +63,7 @@ export async function POST(req) {
     const doc = await Expense.create({ ...value, user: user._id, shopifyStore: store?._id });
     return NextResponse.json({ success: true, expense: toClientExpense(doc) }, { status: 201 });
   } catch (error) {
-    console.error("Create expense error:", error.name, error.message);
+    logError(req, "Create expense error", error);
     return NextResponse.json({ success: false, message: "Could not save the expense." }, { status: 500 });
   }
 }

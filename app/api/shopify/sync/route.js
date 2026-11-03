@@ -4,6 +4,7 @@ import { readJsonBody } from "@/lib/auth/credentials";
 import { getActiveStores } from "@/lib/catalog";
 import { syncStore } from "@/lib/shopify/syncStore";
 import { processDueEvents } from "@/lib/webhooks/queue";
+import { logError } from "@/lib/observability/log";
 
 // Large catalogs take time; 60s is within every Vercel plan's limit.
 export const maxDuration = 60;
@@ -64,7 +65,7 @@ export async function POST(req) {
       { status: anySucceeded ? 200 : 502 },
     );
   } catch (error) {
-    console.error("Sync route error:", error.name, error.message);
+    logError(req, "Sync route error", error);
     return NextResponse.json(
       { success: false, message: "Sync failed." },
       { status: 500 },

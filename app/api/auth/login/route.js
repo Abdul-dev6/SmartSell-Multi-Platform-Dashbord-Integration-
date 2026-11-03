@@ -9,6 +9,7 @@ import {
   getClientIp,
   rateLimitedResponse,
 } from "@/lib/rateLimit";
+import { logError } from "@/lib/observability/log";
 
 const invalidCredentials = () =>
   NextResponse.json({ message: "Invalid email or password" }, { status: 401 });
@@ -74,7 +75,7 @@ export async function POST(req) {
     );
     return setSessionCookie(res, generateToken(user));
   } catch (error) {
-    console.error("Login error:", error.name, error.message);
+    logError(req, "Login error", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

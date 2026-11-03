@@ -3,6 +3,10 @@ import connectDB from "@/lib/mongodb";
 import { safeEqual } from "@/lib/shopify/oauth";
 import { processDueEvents } from "@/lib/webhooks/queue";
 import { reconcileStaleStores } from "@/lib/shopify/syncStore";
+import CronRun, { CRON_RUN_RETENTION_DAYS } from "@/models/CronRun";
+
+const runExpiry = () => new Date(Date.now() + CRON_RUN_RETENTION_DAYS * 86400000);
+import { logError } from "@/lib/observability/log";
 
 export const maxDuration = 60;
 
@@ -19,14 +23,24 @@ export async function GET(req) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  const startedAt = new Date();
   try {
     await connectDB();
-    const startedAt = Date.now();
-    const summary = await processDueEvents({ limit: 500, deadline: startedAt + 20000 });
-    const reconciliation = await reconcileStaleStores({ deadline: startedAt + 30000 });
+    const summary = await processDueEvents({ limit: 500, deadline: startedAt.getTime() + 20000 });
+    const reconciliation = await reconcileStaleStores({ deadline: startedAt.getTime() + 30000 });
+    await CronRun.create({
+      startedAt,
+      finishedAt: new Date(),
+      status: reconciliation.failed ? "failed" : "success",
+      processed: summary.processed,
+      failed: summary.failed,
+      reconciliation,
+      expiresAt: runExpiry(),
+    });
     return NextResponse.json({ success: true, ...summary, reconciliation });
   } catch (error) {
-    console.error("Webhook worker error:", error.name, error.message);
+    await CronRun.create({ startedAt, finishedAt: new Date(), status: "failed", error: error.name, expiresAt: runExpiry() }).catch(() => {});
+    logError(req, "Webhook worker error", error);
     return NextResponse.json({ success: false }, { status: 500 });
   }
 }

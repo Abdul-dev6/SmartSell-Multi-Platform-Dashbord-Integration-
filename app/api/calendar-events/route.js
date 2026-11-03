@@ -3,6 +3,7 @@ import CalendarEvent from "@/models/CalendarEvent";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { toClientEvent, validateCalendarEvent } from "@/lib/calendarEvents";
+import { logError } from "@/lib/observability/log";
 
 const MAX_EVENTS = 1000;
 
@@ -14,7 +15,7 @@ export async function GET(req) {
     const docs = await CalendarEvent.find({ user: user._id }).sort({ date: 1, createdAt: 1 }).limit(MAX_EVENTS).lean();
     return NextResponse.json({ success: true, data: docs.map(toClientEvent) });
   } catch (error) {
-    console.error("List calendar events error:", error.name, error.message);
+    logError(req, "List calendar events error", error);
     return NextResponse.json({ success: false, message: "Could not load events." }, { status: 500 });
   }
 }
@@ -42,7 +43,7 @@ export async function POST(req) {
     const doc = await CalendarEvent.create({ ...value, user: user._id });
     return NextResponse.json({ success: true, event: toClientEvent(doc) }, { status: 201 });
   } catch (error) {
-    console.error("Create calendar event error:", error.name, error.message);
+    logError(req, "Create calendar event error", error);
     return NextResponse.json({ success: false, message: "Could not save the event." }, { status: 500 });
   }
 }

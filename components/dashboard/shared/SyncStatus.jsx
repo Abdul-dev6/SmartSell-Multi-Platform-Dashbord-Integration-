@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { apiErrorText } from "./apiError";
 
 function timeAgo(value) {
   if (!value) return null;
@@ -32,7 +33,7 @@ export default function SyncStatus({ hasStore, sync = [], onSynced, autoSyncIfNe
       const errors = (data.results || []).flatMap((r) => r.errors || []);
       setMessage({
         type: response.ok && !errors.length ? "success" : "error",
-        text: [data.message || "Sync failed.", ...errors].join(" "),
+        text: [apiErrorText(response, data, "Sync failed."), ...errors].join(" "),
       });
       if (response.ok) {
         await onSynced?.();

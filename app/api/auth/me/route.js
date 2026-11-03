@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import User from "@/models/User";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
+import { logError } from "@/lib/observability/log";
 
 // The signed-in user's own profile (never the password hash).
 export async function GET(req) {
@@ -20,7 +21,7 @@ export async function GET(req) {
       },
     });
   } catch (error) {
-    console.error("Current user error:", error.name, error.message);
+    logError(req, "Current user error", error);
     return NextResponse.json({ success: false, message: "Could not load your profile." }, { status: 500 });
   }
 }

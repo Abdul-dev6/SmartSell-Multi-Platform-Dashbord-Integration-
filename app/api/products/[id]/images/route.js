@@ -46,6 +46,6 @@ export async function POST(req, { params }) {
       { status: 201 },
     );
   } catch (error) {
-    return productErrorResponse(error, "Upload product image");
+    return productErrorResponse(error, "Upload product image", req);
   }
 }

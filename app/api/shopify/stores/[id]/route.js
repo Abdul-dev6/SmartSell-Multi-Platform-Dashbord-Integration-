@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { disconnectStore } from "@/lib/shopify/stores";
+import { logError } from "@/lib/observability/log";
 
 // Disconnects one of the signed-in user's Shopify stores.
 export async function DELETE(req, { params }) {
@@ -30,7 +31,7 @@ export async function DELETE(req, { params }) {
         : "Store disconnected in SmartSell, but Shopify could not be reached to revoke access. Uninstall the app from your Shopify admin to fully revoke it.",
     });
   } catch (error) {
-    console.error("Disconnect store error:", error.name, error.message);
+    logError(req, "Disconnect store error", error);
     return NextResponse.json(
       { success: false, message: "Failed to disconnect store" },
       { status: 500 },

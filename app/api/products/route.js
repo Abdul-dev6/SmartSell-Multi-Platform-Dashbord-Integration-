@@ -31,6 +31,6 @@ export async function POST(req) {
     const result = await createProduct(user._id, value);
     return productResponse(result, { notSent });
   } catch (error) {
-    return productErrorResponse(error, "Create product");
+    return productErrorResponse(error, "Create product", req);
   }
 }

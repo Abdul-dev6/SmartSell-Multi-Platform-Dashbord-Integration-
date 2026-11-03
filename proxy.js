@@ -3,22 +3,31 @@ import { clearSessionCookie, SESSION_COOKIE } from "./lib/jwt";
 import { DEFAULT_AFTER_LOGIN } from "./lib/auth/nextPath";
 import { sessionStatus } from "./lib/auth/sessionStatus";
 import { isCrossSiteRequest } from "./lib/security/csrf";
+import { REQUEST_ID_HEADER } from "./lib/observability/log";
 
 const AUTH_PAGES = ["/Login", "/Signup"];
 
 export async function proxy(req) {
   const { pathname, search } = req.nextUrl;
 
-  // API routes authenticate themselves; here they only get the cross-site
-  // check for state-changing requests (no session lookup).
+  // API routes authenticate themselves; here they get a request ID (logged
+  // by the route, returned as x-request-id so users can quote it) and the
+  // cross-site check for state-changing requests (no session lookup).
   if (pathname.startsWith("/api/")) {
+    const requestId = req.headers.get("x-vercel-id") || crypto.randomUUID();
     if (isCrossSiteRequest(req)) {
-      return NextResponse.json(
+      const blocked = NextResponse.json(
         { success: false, code: "cross_site_request", message: "Request blocked." },
         { status: 403 },
       );
+      blocked.headers.set(REQUEST_ID_HEADER, requestId);
+      return blocked;
     }
-    return NextResponse.next();
+    const headers = new Headers(req.headers);
+    headers.set(REQUEST_ID_HEADER, requestId);
+    const response = NextResponse.next({ request: { headers } });
+    response.headers.set(REQUEST_ID_HEADER, requestId);
+    return response;
   }
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;

@@ -12,6 +12,7 @@ import InventoryFields from "@/components/dashboard/listing-form/InventoryFields
 import Shipping from "@/components/dashboard/listing-form/Shipping";
 import Seo from "@/components/dashboard/listing-form/Seo";
 import ActionButtons from "@/components/dashboard/listing-form/ActionButtons";
+import { apiErrorText } from "@/components/dashboard/shared/apiError";
 
 const EMPTY_FORM = {
   // General
@@ -222,7 +223,7 @@ export default function CreateListingForm({ product = null }) {
       const shopifyErrors = (data.userErrors || []).map((e) => e.message);
       setMessage({
         type: "error",
-        text: [data.message || "Save failed.", ...shopifyErrors].join(" "),
+        text: [apiErrorText(response, data, "Save failed."), ...shopifyErrors].join(" "),
       });
     } catch {
       setMessage({
@@ -249,7 +250,7 @@ export default function CreateListingForm({ product = null }) {
         body: JSON.stringify({ confirm: true }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.message || "Delete failed.");
+      if (!response.ok) throw new Error(apiErrorText(response, data, "Delete failed."));
       router.push("/Panel/Ecommerce/Product");
     } catch (error) {
       setMessage({ type: "error", text: error.message });

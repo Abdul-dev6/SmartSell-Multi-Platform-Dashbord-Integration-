@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { getShopifyOAuthConfig } from "@/lib/shopify/oauth";
 import { listStoresForUser } from "@/lib/shopify/stores";
 import { getWebhookCallbackUrl, WEBHOOK_TOPICS } from "@/lib/shopify/webhookRegistration";
+import { logError } from "@/lib/observability/log";
 
 const REQUIRED_TOPICS = Object.values(WEBHOOK_TOPICS);
 
@@ -63,7 +64,7 @@ export async function GET(req) {
       stores,
     });
   } catch (error) {
-    console.error("Shopify status error:", error.name, error.message);
+    logError(req, "Shopify status error", error);
 
     return NextResponse.json(
       {

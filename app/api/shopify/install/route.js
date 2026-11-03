@@ -8,6 +8,7 @@ import {
   normalizeShopDomain,
   setOAuthStateCookie,
 } from "@/lib/shopify/oauth";
+import { logError } from "@/lib/observability/log";
 
 function redirectToIntegration(req, params) {
   const url = new URL("/Panel/Ecommerce/Integration", req.url);
@@ -71,7 +72,7 @@ export async function GET(req) {
       cookieValue,
     );
   } catch (error) {
-    console.error("Shopify install error:", error.name, error.message);
+    logError(req, "Shopify install error", error);
     return redirectToIntegration(req, { error: "connection_failed" });
   }
 }

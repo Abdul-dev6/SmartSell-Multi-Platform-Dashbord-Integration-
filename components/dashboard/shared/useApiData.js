@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { apiErrorText } from "./apiError";
 
 // Loads JSON from a SmartSell API route that responds with
 // { success, data, ... }. Returns the whole body so callers can read extra
@@ -18,7 +19,7 @@ export default function useApiData(url) {
         const response = await fetch(url, { cache: "no-store", signal });
         const json = await response.json().catch(() => ({}));
         if (!response.ok || !json.success) {
-          throw new Error(json.message || `Request failed (${response.status})`);
+          throw new Error(apiErrorText(response, json, `Request failed (${response.status})`));
         }
         setBody(json);
       } catch (err) {

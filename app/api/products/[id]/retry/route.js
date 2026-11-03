@@ -15,6 +15,6 @@ export async function POST(req, { params }) {
     const { id } = await params;
     return productResponse(await retryProduct(user._id, id));
   } catch (error) {
-    return productErrorResponse(error, "Retry product");
+    return productErrorResponse(error, "Retry product", req);
   }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import CalendarEvent from "@/models/CalendarEvent";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
+import { logError } from "@/lib/observability/log";
 
 export async function DELETE(req, { params }) {
   try {
@@ -17,7 +18,7 @@ export async function DELETE(req, { params }) {
     }
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete calendar event error:", error.name, error.message);
+    logError(req, "Delete calendar event error", error);
     return NextResponse.json({ success: false, message: "Could not delete the event." }, { status: 500 });
   }
 }

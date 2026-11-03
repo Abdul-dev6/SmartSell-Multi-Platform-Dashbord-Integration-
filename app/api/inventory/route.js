@@ -6,6 +6,7 @@ import {
   getProductsNeedingAttention,
   syncSummary,
 } from "@/lib/catalog";
+import { logError } from "@/lib/observability/log";
 
 // Product/variant/inventory rows from MongoDB for the signed-in user.
 export async function GET(req) {
@@ -36,7 +37,7 @@ export async function GET(req) {
       sync: syncSummary(stores),
     });
   } catch (error) {
-    console.error("Inventory route error:", error.name, error.message);
+    logError(req, "Inventory route error", error);
     return NextResponse.json(
       { success: false, message: "Could not load products." },
       { status: 500 },

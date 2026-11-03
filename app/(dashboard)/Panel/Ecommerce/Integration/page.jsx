@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import IntegrationCard from "@/components/dashboard/integrations/IntegrationCard";
+import StoreHealth from "@/components/dashboard/integrations/StoreHealth";
 import { useSearchParams } from "next/navigation";
 
 const ERROR_MESSAGES = {
@@ -286,6 +287,8 @@ function IntegrationContent() {
           </ul>
         </section>
       )}
+
+      {activeStores.length > 0 && <StoreHealth />}
 
       {/* ── Integration Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">

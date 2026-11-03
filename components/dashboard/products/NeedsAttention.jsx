@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiErrorText } from "@/components/dashboard/shared/apiError";
 
 const OPERATION_LABELS = { create: "Create", update: "Update", delete: "Delete" };
 
@@ -22,7 +23,7 @@ export default function NeedsAttention({ items = [], onChanged }) {
         await onChanged?.();
         return;
       }
-      if (!response.ok) throw new Error(data.message || "Retry failed.");
+      if (!response.ok) throw new Error(apiErrorText(response, data, "Retry failed."));
       await onChanged?.();
     } catch (error) {
       setMessages((m) => ({ ...m, [item.id]: error.message }));

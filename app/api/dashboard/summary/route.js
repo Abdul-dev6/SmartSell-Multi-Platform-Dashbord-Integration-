@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { getActiveStores, syncSummary } from "@/lib/catalog";
 import { getDashboardSummary } from "@/lib/analytics/dashboard";
+import { logError } from "@/lib/observability/log";
 
 export async function GET(req) {
   try {
@@ -18,7 +19,7 @@ export async function GET(req) {
       data: { ...summary, sync: syncSummary(stores) },
     });
   } catch (error) {
-    console.error("Dashboard summary error:", error.name, error.message);
+    logError(req, "Dashboard summary error", error);
     return NextResponse.json(
       { success: false, message: "Could not load dashboard data." },
       { status: 500 },

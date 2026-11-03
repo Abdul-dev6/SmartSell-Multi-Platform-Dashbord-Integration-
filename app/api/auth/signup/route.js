@@ -14,6 +14,7 @@ import {
   getClientIp,
   rateLimitedResponse,
 } from "@/lib/rateLimit";
+import { logError } from "@/lib/observability/log";
 
 export async function POST(req) {
   const body = await readJsonBody(req);
@@ -87,7 +88,7 @@ export async function POST(req) {
         { status: 409 },
       );
     }
-    console.error("Signup error:", error.name, error.message);
+    logError(req, "Signup error", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 },

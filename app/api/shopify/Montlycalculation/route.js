@@ -1,6 +1,7 @@
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { getActiveStores } from "@/lib/catalog";
 import { getDashboardSummary } from "@/lib/analytics/dashboard";
+import { logError } from "@/lib/observability/log";
 
 // Monthly revenue / expense / profit for the current year, from MongoDB.
 // Kept for compatibility; the dashboard now uses /api/dashboard/summary.
@@ -28,7 +29,7 @@ export async function GET(request) {
       })),
     });
   } catch (error) {
-    console.error("Revenue API error:", error.name, error.message);
+    logError(request, "Revenue API error", error);
 
     return Response.json(
       {
