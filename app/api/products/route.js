@@ -30,11 +30,19 @@ async function handlePOST(req) {
     }
 
     const result = await createProduct(user._id, value);
-    return productResponse(result, { notSent, ...(result.partial ? { partial: result.partial } : {}) });
+    return productResponse(result, {
+      notSent,
+      ...(result.partial ? { partial: result.partial } : {}),
+      ...(value.cost !== undefined ? { costSaved: true } : {}),
+    });
   } catch (error) {
     return productErrorResponse(error, "Create product", req);
   }
 }
 
 // Each outcome is recorded as a notification (toast + bell).
-export const POST = withNotification(handlePOST, (b) => ({ success: b.partial ? `“${b.product?.title}” created; sales channels need a retry` : `“${b.product?.title}” created in Shopify`, failure: "Product not created" }));
+export const POST = withNotification(handlePOST, (b) => ({
+  success: b.partial ? `“${b.product?.title}” created; sales channels need a retry` : `“${b.product?.title}” created in Shopify`,
+  failure: "Product not created",
+  message: b.costSaved ? `Cost per item saved (${b.product?.cost}). Dashboard expenses now include it.` : undefined,
+}));

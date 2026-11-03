@@ -49,7 +49,7 @@ export default function InventoryPage() {
         onExport={() => downloadCsv(exportFilename("smartsell-inventory"), toCsv(filtered, CSV_COLUMNS))}
       />
 
-      <InventoryList inventorydata={filtered} />
+      <InventoryList inventorydata={filtered} onChanged={reload} />
       {inventorydata.length > 0 && filtered.length === 0 && (
         <p className="mt-4 text-sm text-slate-500">No inventory matches your filters.</p>
       )}

@@ -72,7 +72,6 @@ function Dashboard() {
         },
       ]
     : [];
-  const costs = figures?.costs;
 
   return (
     <div className="flex flex-col gap-6 px-4 sm:px-6 lg:px-8 py-6 bg-slate-50 min-h-screen">
@@ -146,29 +145,6 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* ── How expenses were calculated ── */}
-      {costs && (
-        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-700">
-          <p className="font-semibold text-slate-800">Expenses ({label}) — calculated automatically</p>
-          <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <div><dt className="text-xs text-slate-500">Product cost</dt><dd>{formatMoney(costs.productCost, currency)}</dd></div>
-            <div><dt className="text-xs text-slate-500">Shopify fees</dt><dd>{formatMoney(costs.shopifyFees, currency)}</dd></div>
-            <div>
-              <dt className="text-xs text-slate-500">Packaging ({costs.shippedUnits} shipped × {formatMoney(summary.packagingCostPerItem, currency)})</dt>
-              <dd>{formatMoney(costs.packaging, currency)}</dd>
-            </div>
-          </dl>
-          {costs.unitsWithoutCost > 0 && (
-            <p className="mt-2 text-xs text-amber-700">
-              {costs.unitsWithoutCost} unit{costs.unitsWithoutCost === 1 ? "" : "s"} sold have no Cost per item, so their product cost is not
-              included. Set the cost on the product&apos;s edit page.
-            </p>
-          )}
-          {!summary.packagingCostPerItem && (
-            <p className="mt-1 text-xs text-slate-500">Set a packaging cost per item in your profile to include packaging.</p>
-          )}
-        </div>
-      )}
 
       {/* ── Charts Row ── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">

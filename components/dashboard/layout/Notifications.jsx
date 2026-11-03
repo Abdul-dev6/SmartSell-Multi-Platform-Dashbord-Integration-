@@ -7,7 +7,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 // state-changing request from the panel fetches the new ones and shows them
 // as toasts.
 
-const NotificationsContext = createContext({ notifications: [], unread: 0, markAllRead: () => {}, refresh: () => {} });
+const NotificationsContext = createContext({ notifications: [], unread: 0, markAllRead: () => {}, clearAll: () => {}, refresh: () => {} });
 export const useNotifications = () => useContext(NotificationsContext);
 
 const TOAST_MS = 5000;
@@ -79,8 +79,14 @@ export function NotificationsProvider({ children }) {
     }).catch(() => {});
   }, []);
 
+  const clearAll = useCallback(async () => {
+    setNotifications([]);
+    setUnread(0);
+    await fetch("/api/notifications", { method: "DELETE" }).catch(() => {});
+  }, []);
+
   return (
-    <NotificationsContext.Provider value={{ notifications, unread, markAllRead, refresh: load }}>
+    <NotificationsContext.Provider value={{ notifications, unread, markAllRead, clearAll, refresh: load }}>
       {children}
       <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2" aria-live="polite">
         {toasts.map((t) => (

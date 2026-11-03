@@ -125,6 +125,37 @@ describe("notifications", () => {
   });
 });
 
+describe("notification options", () => {
+  it("Clear removes all of the user's notifications, not other users'", async () => {
+    const { user, cookie } = await setup();
+    const other = await setup();
+    await createProductRoute(req("POST", "/api/products", cookie, { idempotencyKey: "key-clear-0001", title: "Mug", price: "5" }));
+    await createProductRoute(req("POST", "/api/products", other.cookie, { idempotencyKey: "key-clear-0002", title: "Cup", price: "5" }));
+    const { DELETE: clearAll } = await import("@/app/api/notifications/route");
+    const res = await clearAll(req("DELETE", "/api/notifications", cookie));
+    expect(await res.json()).toEqual({ success: true, deleted: 1 });
+    expect(await Notification.countDocuments({ user: user._id })).toBe(0);
+    expect(await Notification.countDocuments({ user: other.user._id })).toBe(1);
+  });
+
+  it("saving a Cost per item says so in the notification", async () => {
+    const { user, cookie } = await setup();
+    await createProductRoute(req("POST", "/api/products", cookie, { idempotencyKey: "key-cost-note1", title: "Mug", price: "9", cost: "3" }));
+    const note = await Notification.findOne({ user: user._id }).lean();
+    expect(note).toMatchObject({ type: "success", title: "“Mug” created in Shopify" });
+    expect(note.message).toMatch(/Cost per item saved .*expenses now include it/);
+  });
+});
+
+describe("listing and inventory use the product table", () => {
+  it("both render ProductTable (inventory with location, quantity and updated)", () => {
+    const listing = fs.readFileSync("components/dashboard/listings/ListingTable.jsx", "utf8");
+    const inventory = fs.readFileSync("components/dashboard/inventory/InventoryList.jsx", "utf8");
+    expect(listing).toContain("<ProductTable ProductData={ListingData} onChanged={onChanged} />");
+    expect(inventory).toContain("<ProductTable ProductData={inventorydata} onChanged={onChanged} showLocation />");
+  });
+});
+
 describe("calculated expenses", () => {
   async function storeWithSales() {
     const ctx = await setup();
@@ -148,38 +179,37 @@ describe("calculated expenses", () => {
     return ctx;
   }
 
-  it("all time: product cost + Shopify fees + packaging per shipped item", async () => {
+  it("all time: product cost + Shopify fees", async () => {
     const { user } = await storeWithSales();
-    const summary = await getDashboardSummary(user._id, await getActiveStores(user._id), { now: new Date("2026-11-03T00:00:00Z"), packagingCostPerItem: 0.5 });
+    const summary = await getDashboardSummary(user._id, await getActiveStores(user._id), { now: new Date("2026-11-03T00:00:00Z") });
     expect(summary.period).toEqual({ value: "all", label: "All time" });
-    expect(summary.selected.costs).toEqual({ productCost: 20, shopifyFees: 1.75, packaging: 2.5, shippedUnits: 5, unitsWithoutCost: 1 });
-    expect(summary.selected).toMatchObject({ revenue: 80, orders: 2, expense: 24.25, profit: 55.75 });
+    expect(summary.selected.costs).toEqual({ productCost: 20, shopifyFees: 1.75, unitsWithoutCost: 1 });
+    expect(summary.selected).toMatchObject({ revenue: 80, orders: 2, expense: 21.75, profit: 58.25 });
     expect(summary.selectedChange).toBeNull();
     expect(summary.availableMonths.map((m) => m.value)).toEqual(["2026-11", "2026-10"]);
   });
 
   it("one month, compared with the month before", async () => {
     const { user } = await storeWithSales();
-    const summary = await getDashboardSummary(user._id, await getActiveStores(user._id), { now: new Date("2026-11-03T00:00:00Z"), period: "2026-11", packagingCostPerItem: 0.5 });
+    const summary = await getDashboardSummary(user._id, await getActiveStores(user._id), { now: new Date("2026-11-03T00:00:00Z"), period: "2026-11" });
     expect(summary.period.label).toBe("Nov 2026");
-    // 2 units × 4 + fees 1.75 + 2 shipped × 0.5
-    expect(summary.selected).toMatchObject({ revenue: 50, orders: 1, expense: 10.75 });
+    // 2 units × 4 + fees 1.75
+    expect(summary.selected).toMatchObject({ revenue: 50, orders: 1, expense: 9.75 });
     expect(summary.selected.costs.unitsWithoutCost).toBe(1);
     expect(summary.selectedChange.revenue).toBeCloseTo(66.67, 1);
-    // Oct: 3 × 4 + 3 shipped × 0.5
-    expect(summary.monthly.find((m) => m.month === "Oct").expense).toBe(13.5);
+    // Oct: 3 × 4
+    expect(summary.monthly.find((m) => m.month === "Oct").expense).toBe(12);
   });
 
-  it("period parsing and the summary route use the user's packaging cost", async () => {
+  it("period parsing and the summary route", async () => {
     expect(parsePeriod("2026-11")).toEqual({ year: 2026, month: 11 });
     expect(parsePeriod("all")).toBeNull();
     expect(parsePeriod("2026-13")).toBeNull();
 
-    const { user, cookie } = await storeWithSales();
-    await User.updateOne({ _id: user._id }, { $set: { "settings.packagingCostPerItem": 1 } });
+    const { cookie } = await storeWithSales();
     const body = await (await summaryRoute(req("GET", "/api/dashboard/summary?period=2026-10", cookie))).json();
     expect(body.data.period.value).toBe("2026-10");
-    expect(body.data.selected.costs).toMatchObject({ productCost: 12, packaging: 3 });
+    expect(body.data.selected.costs).toEqual({ productCost: 12, shopifyFees: 0, unitsWithoutCost: 0 });
   });
 });
 
@@ -274,21 +304,21 @@ describe("cost per item is saved to Shopify", () => {
 });
 
 describe("profile editing", () => {
-  it("updates name and packaging cost, validates input, and returns the settings", async () => {
+  it("updates the name, validates input, and has no packaging setting", async () => {
     const { cookie } = await setup();
     let res = await updateMe(req("PATCH", "/api/auth/me", cookie, { name: "  Abdul  ", packagingCostPerItem: "0.75" }));
     expect(res.status).toBe(200);
-    expect((await res.json()).user).toMatchObject({ name: "Abdul", settings: { packagingCostPerItem: 0.75 } });
+    const saved = (await res.json()).user;
+    expect(saved.name).toBe("Abdul");
+    expect(saved).not.toHaveProperty("settings");
 
-    res = await updateMe(req("PATCH", "/api/auth/me", cookie, { packagingCostPerItem: "-1" }));
-    expect(res.status).toBe(400);
     res = await updateMe(req("PATCH", "/api/auth/me", cookie, { name: "x".repeat(81) }));
     expect(res.status).toBe(400);
     res = await updateMe(req("PATCH", "/api/auth/me", cookie, {}));
     expect(res.status).toBe(400);
 
     const me = await (await meRoute(req("GET", "/api/auth/me", cookie))).json();
-    expect(me.user).toMatchObject({ name: "Abdul", settings: { packagingCostPerItem: 0.75 } });
+    expect(me.user.name).toBe("Abdul");
   });
 
   it("changes the password, signs out other sessions and keeps this one", async () => {

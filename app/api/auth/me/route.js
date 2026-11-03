@@ -6,7 +6,6 @@ import { logError } from "@/lib/observability/log";
 import { withNotification } from "@/lib/notifyRoute";
 
 const MAX_NAME = 80;
-const MONEY_RE = /^\d{1,6}(\.\d{1,2})?$/;
 
 async function profileOf(user) {
   const hasPassword = Boolean(await User.exists({ _id: user._id, password: { $exists: true, $ne: null } }));
@@ -15,7 +14,6 @@ async function profileOf(user) {
     email: user.email,
     createdAt: user.createdAt,
     signInMethod: hasPassword ? "password" : "google_or_github",
-    settings: { packagingCostPerItem: user.settings?.packagingCostPerItem ?? 0 },
   };
 }
 
@@ -31,8 +29,8 @@ export async function GET(req) {
   }
 }
 
-// Updates the profile: { name?, packagingCostPerItem? }. The email is the
-// sign-in identity and is not changed here.
+// Updates the profile: { name }. The email is the sign-in identity and is
+// not changed here.
 async function handlePATCH(req) {
   try {
     const { user, response } = await requireUser(req);
@@ -46,14 +44,6 @@ async function handlePATCH(req) {
       const name = typeof body.name === "string" ? body.name.trim() : null;
       if (name === null || name.length > MAX_NAME) errors.name = `Name must be text of at most ${MAX_NAME} characters.`;
       else set.name = name;
-    }
-    if (body.packagingCostPerItem !== undefined) {
-      const raw = typeof body.packagingCostPerItem === "number" ? String(body.packagingCostPerItem) : body.packagingCostPerItem;
-      if (typeof raw !== "string" || !MONEY_RE.test(raw.trim())) {
-        errors.packagingCostPerItem = "Enter an amount of 0 or more, with up to 2 decimals.";
-      } else {
-        set["settings.packagingCostPerItem"] = Number(raw);
-      }
     }
 
     if (Object.keys(errors).length) {

@@ -9,7 +9,9 @@ import { motion } from "framer-motion";
 import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { ListProgress, useIncrementalList } from "@/components/dashboard/shared/useIncrementalList";
 
-export default function ProductTable({ ProductData = [], onChanged }) {
+// Shared by the Products, Listing and Inventory pages. `showLocation` adds
+// the stock location, the exact quantity and the last update (Inventory).
+export default function ProductTable({ ProductData = [], onChanged, showLocation = false }) {
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState(null);
   const { visible, setRoot, setSentinel, shown, total, hasMore } = useIncrementalList(ProductData);
@@ -74,9 +76,13 @@ export default function ProductTable({ ProductData = [], onChanged }) {
 
             <th className="text-left">Price</th>
 
+            {showLocation && <th className="text-left">Location</th>}
+
             <th className="text-left">Stock</th>
 
             <th className="text-left">Status</th>
+
+            {showLocation && <th className="text-left">Updated</th>}
 
             <th className="text-center">Actions</th>
           </tr>
@@ -114,7 +120,14 @@ export default function ProductTable({ ProductData = [], onChanged }) {
 
               <td>{formatMoney(item.price, item.currency)}</td>
 
-              <td>{StockavailabilityStatus(item.available)}</td>
+              {showLocation && <td>{item.location_name || item.location_id || "—"}</td>}
+
+              <td>
+                {showLocation && typeof item.available === "number" && (
+                  <span className="mr-2 font-semibold">{item.available}</span>
+                )}
+                <span className={showLocation ? "text-sm text-slate-500" : ""}>{StockavailabilityStatus(item.available)}</span>
+              </td>
 
               <td>
                 <span
@@ -125,6 +138,12 @@ export default function ProductTable({ ProductData = [], onChanged }) {
                   {item.status}
                 </span>
               </td>
+
+              {showLocation && (
+                <td className="text-sm text-slate-500">
+                  {item.updated_at ? new Date(item.updated_at).toLocaleDateString() : "—"}
+                </td>
+              )}
 
               <td>
                 <div className="flex justify-center gap-3">

@@ -20,10 +20,9 @@ async function send(url, method, body) {
   return data;
 }
 
-// Name and business settings.
+// Name (the email is the sign-in identity and stays as it is).
 function EditProfile({ user, onSaved }) {
   const [name, setName] = useState(user.name || "");
-  const [packaging, setPackaging] = useState(String(user.settings?.packagingCostPerItem ?? 0));
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
 
@@ -32,7 +31,7 @@ function EditProfile({ user, onSaved }) {
     setBusy(true);
     setMessage(null);
     try {
-      await send("/api/auth/me", "PATCH", { name, packagingCostPerItem: packaging.trim() || "0" });
+      await send("/api/auth/me", "PATCH", { name });
       setMessage({ type: "success", text: "Profile saved." });
       onSaved?.();
     } catch (err) {
@@ -54,11 +53,6 @@ function EditProfile({ user, onSaved }) {
           <label htmlFor="profile-email" className="block text-sm font-medium text-slate-700 mb-1">Email</label>
           <input id="profile-email" value={user.email} disabled className={`${inputClass} bg-slate-50 text-slate-500`} />
           <p className="mt-1 text-xs text-slate-500">Your email is how you sign in and can&apos;t be changed here.</p>
-        </div>
-        <div>
-          <label htmlFor="profile-packaging" className="block text-sm font-medium text-slate-700 mb-1">Packaging cost per item</label>
-          <input id="profile-packaging" type="number" min="0" step="0.01" inputMode="decimal" value={packaging} onChange={(e) => setPackaging(e.target.value)} className={inputClass} />
-          <p className="mt-1 text-xs text-slate-500">In your store currency. Used to calculate packaging expenses for every item shipped.</p>
         </div>
       </div>
       {message && (
@@ -260,7 +254,7 @@ const Userprofile = () => {
             )}
           </div>
 
-          <EditProfile key={`${user.name}|${user.settings?.packagingCostPerItem}`} user={user} onSaved={reload} />
+          <EditProfile key={user.name || ""} user={user} onSaved={reload} />
 
           {user.signInMethod === "password" && <ChangePassword />}
 

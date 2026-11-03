@@ -14,10 +14,7 @@ export async function GET(req) {
     const stores = await getActiveStores(user._id);
     // ?period=all (default) or YYYY-MM selects what the cards show.
     const period = new URL(req.url).searchParams.get("period") || "all";
-    const summary = await getDashboardSummary(user._id, stores, {
-      period,
-      packagingCostPerItem: user.settings?.packagingCostPerItem || 0,
-    });
+    const summary = await getDashboardSummary(user._id, stores, { period });
 
     return NextResponse.json({
       success: true,

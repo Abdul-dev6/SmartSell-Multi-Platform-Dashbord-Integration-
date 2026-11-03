@@ -49,3 +49,16 @@ export async function PATCH(req) {
     return NextResponse.json({ success: false, message: "Could not update notifications." }, { status: 500 });
   }
 }
+
+// Clears (deletes) all of the user's notifications.
+export async function DELETE(req) {
+  try {
+    const { user, response } = await requireUser(req);
+    if (response) return response;
+    const result = await Notification.deleteMany({ user: user._id });
+    return NextResponse.json({ success: true, deleted: result.deletedCount });
+  } catch (error) {
+    logError(req, "Clear notifications error", error);
+    return NextResponse.json({ success: false, message: "Could not clear notifications." }, { status: 500 });
+  }
+}

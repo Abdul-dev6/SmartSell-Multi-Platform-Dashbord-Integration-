@@ -83,7 +83,7 @@ function Navbar() {
     router.push(href);
   };
 
-  const { notifications: datanotification, unread: unreadCount, markAllRead } = useNotifications();
+  const { notifications: datanotification, unread: unreadCount, markAllRead, clearAll } = useNotifications();
 
   const handleLogout = async () => {
     try {
@@ -193,11 +193,18 @@ function Navbar() {
                       </span>
                     )}
                   </div>
-                  {unreadCount > 0 && (
-                    <button type="button" onClick={markAllRead} className="text-xs font-medium text-indigo-600 hover:underline">
-                      Mark all read
-                    </button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {unreadCount > 0 && (
+                      <button type="button" onClick={markAllRead} className="text-xs font-medium text-indigo-600 hover:underline">
+                        Mark all read
+                      </button>
+                    )}
+                    {datanotification.length > 0 && (
+                      <button type="button" onClick={clearAll} className="text-xs font-medium text-red-600 hover:underline">
+                        Clear
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Items */}

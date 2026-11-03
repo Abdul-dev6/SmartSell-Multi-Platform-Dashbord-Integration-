@@ -71,7 +71,10 @@ async function handlePATCH(req, { params }) {
       return validationErrorResponse({ _form: "No changes to save." });
     }
 
-    return productResponse(await updateProduct(user._id, id, value), { notSent });
+    return productResponse(await updateProduct(user._id, id, value), {
+      notSent,
+      ...(value.cost !== undefined ? { costSaved: true } : {}),
+    });
   } catch (error) {
     return productErrorResponse(error, "Update product", req);
   }
@@ -103,5 +106,9 @@ async function handleDELETE(req, { params }) {
 }
 
 // Each outcome is recorded as a notification (toast + bell).
-export const PATCH = withNotification(handlePATCH, (b) => ({ success: `“${b.product?.title}” updated`, failure: "Product not updated" }));
+export const PATCH = withNotification(handlePATCH, (b) => ({
+  success: `“${b.product?.title}” updated`,
+  failure: "Product not updated",
+  message: b.costSaved ? `Cost per item saved (${b.product?.cost}). Dashboard expenses now include it.` : undefined,
+}));
 export const DELETE = withNotification(handleDELETE, (b) => ({ success: `“${b.product?.title}” deleted from Shopify`, failure: "Product not deleted" }));
