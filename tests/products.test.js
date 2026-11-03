@@ -43,13 +43,13 @@ beforeEach(async () => {
 describe("validation", () => {
   it("accepts a valid create and whitelists fields", () => {
     const { value, errors, notSent } = validateProductInput(
-      { idempotencyKey: KEY, title: " Mug ", price: "5", comparePrice: "7.5", tags: "a, b, a", status: "active", quantity: "3", hacker: "x" },
+      { idempotencyKey: KEY, title: " Mug ", price: "5", comparePrice: "7.5", tags: "a, b, a", status: "active", quantity: "3", cost: "2", hacker: "x" },
       { mode: "create" },
     );
     expect(errors).toEqual({});
     expect(value).toMatchObject({ title: "Mug", status: "ACTIVE", tags: ["a", "b"], variant: { price: "5.00", compareAtPrice: "7.50" } });
     expect(value.hacker).toBeUndefined();
-    expect(notSent).toContain("inventory quantity (read-only in SmartSell)");
+    expect(notSent).toEqual(["cost per item"]); // a bare "quantity" key is ignored; stock goes in "inventory"
   });
 
   it.each([
@@ -355,11 +355,11 @@ describe("routes", () => {
     expect((await bad.json()).errors).toMatchObject({ title: "Required", price: "Required" });
     expect(shopifyProducts()).toHaveLength(0);
 
-    const ok = await productsRoute.POST(json("/api/products", "POST", { idempotencyKey: KEY, title: "Mug", price: "3", quantity: "5" }, cookie));
+    const ok = await productsRoute.POST(json("/api/products", "POST", { idempotencyKey: KEY, title: "Mug", price: "3", cost: "1" }, cookie));
     const body = await ok.json();
     expect(ok.status).toBe(201);
     expect(body.product).toMatchObject({ title: "Mug", price: "3.00", syncStatus: "synced" });
-    expect(body.notSent).toContain("inventory quantity (read-only in SmartSell)");
+    expect(body.notSent).toContain("cost per item");
     expect(JSON.stringify(body)).not.toMatch(/accessToken|"t"/);
   });
 

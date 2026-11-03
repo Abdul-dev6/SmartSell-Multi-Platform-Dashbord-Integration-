@@ -24,11 +24,16 @@ export const EMPTY_FORM = {
   comparePrice: "",
   cost: "",
 
-  // Inventory (quantity and tracking are read-only in SmartSell)
+  // Inventory
   sku: "",
   barcode: "",
   trackInventory: true,
   continueSelling: false,
+  // Available stock per location ID, as typed ("" = not set).
+  inventory: {},
+  // Stock as loaded from SmartSell, per location ID (numbers); sent as
+  // `expected` so a change made in Shopify since loading is not overwritten.
+  inventoryExpected: {},
 
   // Shipping (the variant's inventory item in Shopify)
   requiresShipping: true,
@@ -47,13 +52,14 @@ export const EMPTY_FORM = {
 // Shopify and reports anything it could not send.
 const BASIC = [
   "title", "description", "vendor", "productType", "tags", "status",
-  "price", "comparePrice", "cost", "sku", "barcode", "trackInventory",
+  "price", "comparePrice", "cost", "sku", "barcode",
   "continueSelling", "seoTitle", "seoDescription", "handle",
 ];
 const SHIPPING = ["requiresShipping", "weight", "weightUnit", "countryOfOrigin", "hsCode"];
 
 export function formFromProduct(product) {
   const shipping = product.shipping || {};
+  const levels = product.inventoryLevels || [];
   return {
     ...EMPTY_FORM,
     title: product.title || "",
@@ -71,6 +77,9 @@ export function formFromProduct(product) {
     sku: product.sku ?? "",
     barcode: product.barcode ?? "",
     handle: product.handle || "",
+    trackInventory: product.trackInventory ?? true,
+    inventory: Object.fromEntries(levels.map((l) => [String(l.locationId), l.available === null || l.available === undefined ? "" : String(l.available)])),
+    inventoryExpected: Object.fromEntries(levels.map((l) => [String(l.locationId), l.available ?? null])),
     requiresShipping: shipping.requiresShipping ?? true,
     weight: shipping.weight === null || shipping.weight === undefined ? "" : String(shipping.weight),
     weightUnit: shipping.weightUnit || "KILOGRAMS",
@@ -98,10 +107,13 @@ function canonical(key, form) {
 //   channelsAvailable – sales channels can be sent (permissions granted and
 //                       the product's current channels are known)
 //   shippingEditable  – false for products with several variants
+//   inventoryEditable – stock can be managed (write_inventory granted and a
+//                       single variant)
 //   statusOverride    – e.g. "draft" from "Save as draft"
-export function buildProductPayload(form, baseline, { isEdit, channelsAvailable, shippingEditable = true, statusOverride, idempotencyKey } = {}) {
+export function buildProductPayload(form, baseline, { isEdit, channelsAvailable, shippingEditable = true, inventoryEditable = false, statusOverride, idempotencyKey } = {}) {
   const keys = [...BASIC, "category", "collections"];
   if (channelsAvailable) keys.push("publications");
+  if (inventoryEditable) keys.push("trackInventory");
   if (shippingEditable) keys.push(...SHIPPING);
 
   let changed = isEdit ? keys.filter((key) => canonical(key, form) !== canonical(key, baseline)) : keys;
@@ -124,7 +136,29 @@ export function buildProductPayload(form, baseline, { isEdit, channelsAvailable,
   }
 
   const payload = Object.fromEntries(changed.map((key) => [key, apiValue(key, form)]));
+  if (inventoryEditable && form.trackInventory) {
+    const inventory = inventoryChanges(form, baseline, isEdit);
+    if (inventory.length) payload.inventory = inventory;
+  }
   if (statusOverride) payload.status = statusOverride;
   if (!isEdit) payload.idempotencyKey = idempotencyKey;
   return payload;
+}
+
+// Stock entries to send: on create every location with a number typed; on
+// edit only locations whose number changed (with the stock the user saw).
+// A cleared field is not sent: stock cannot be "unset" at a location.
+function inventoryChanges(form, baseline, isEdit) {
+  const entries = [];
+  for (const [locationId, raw] of Object.entries(form.inventory || {})) {
+    const text = String(raw ?? "").trim();
+    if (text === "") continue;
+    if (isEdit && text === String(baseline.inventory?.[locationId] ?? "").trim()) continue;
+    entries.push({
+      locationId,
+      available: Number(text),
+      expected: isEdit ? baseline.inventoryExpected?.[locationId] ?? null : null,
+    });
+  }
+  return entries;
 }

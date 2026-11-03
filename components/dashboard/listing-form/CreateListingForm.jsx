@@ -32,6 +32,8 @@ const FIELD_LABELS = {
   category: "Category",
   collections: "Collections",
   publications: "Sales channels",
+  inventory: "Available quantity",
+  trackInventory: "Track quantity",
   requiresShipping: "Physical product",
   weight: "Weight",
   weightUnit: "Weight unit",
@@ -90,6 +92,8 @@ export default function CreateListingForm({ product = null }) {
   const [saved, setSaved] = useState(null);
   // null while loading; true when sales channels can be read and changed.
   const [channelsAvailable, setChannelsAvailable] = useState(null);
+  // null while loading; true when stock can be managed (write_inventory).
+  const [inventoryEditable, setInventoryEditable] = useState(null);
   const multiVariant = isEdit && product.variantCount > 1;
 
   const buildPayload = (statusOverride) =>
@@ -97,6 +101,7 @@ export default function CreateListingForm({ product = null }) {
       isEdit,
       channelsAvailable: channelsAvailable === true,
       shippingEditable: !multiVariant,
+      inventoryEditable: inventoryEditable === true && !multiVariant,
       statusOverride,
       idempotencyKey: requestKey,
     });
@@ -164,6 +169,11 @@ export default function CreateListingForm({ product = null }) {
 
       if (data.errors) setErrors(data.errors);
       const shopifyErrors = (data.userErrors || []).map((e) => e.message);
+      if (data.code === "stock_changed" && data.stockChanges?.length) {
+        shopifyErrors.push(
+          `Now in Shopify: ${data.stockChanges.map((c) => `${c.current} (you saw ${c.expected})`).join(", ")}.`,
+        );
+      }
       setMessage({
         type: "error",
         text: [apiErrorText(response, data, "Save failed."), ...shopifyErrors].join(" "),
@@ -257,7 +267,11 @@ export default function CreateListingForm({ product = null }) {
 
         <Pricing {...sectionProps} />
 
-        <InventoryFields {...sectionProps} />
+        <InventoryFields
+          {...sectionProps}
+          onEditable={setInventoryEditable}
+          disabledReason={multiVariant ? "Stock differs per variant for this product and is not edited here." : null}
+        />
 
         <Shipping
           {...sectionProps}

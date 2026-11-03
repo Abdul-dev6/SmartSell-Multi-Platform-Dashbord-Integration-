@@ -38,7 +38,7 @@ export function toGraphqlProduct(p, { publications = false } = {}) {
         inventoryItem: v.inventory_item_id
           ? {
               legacyResourceId: String(v.inventory_item_id),
-              tracked: true,
+              tracked: v.tracked ?? true,
               requiresShipping: v.requires_shipping ?? true,
               countryCodeOfOrigin: v.country_code_of_origin ?? null,
               harmonizedSystemCode: v.harmonized_system_code ?? null,
@@ -227,6 +227,16 @@ export function fakeShopifyStore({ products = [], collections = FAKE_COLLECTIONS
     taxonomy: [...taxonomy],
     // Variables of each mutation, by name, for assertions.
     inputs: {},
+    // Available stock: "<inventoryItemId>:<locationId>" -> quantity.
+    inventory: new Map(),
+  };
+  const numId = (gid) => String(gid).split("/").pop();
+  const variantByItem = (itemId) => {
+    for (const product of state.products) {
+      const v = (product.variants || []).find((x) => String(x.inventory_item_id) === String(itemId));
+      if (v) return v;
+    }
+    return null;
   };
   const categoryById = (id) => {
     const c = state.taxonomy.find((t) => t.id === id);
@@ -241,6 +251,7 @@ export function fakeShopifyStore({ products = [], collections = FAKE_COLLECTIONS
       variant.weight_unit = item.measurement.weight.unit;
     }
     if (item.harmonizedSystemCode !== undefined) variant.harmonized_system_code = item.harmonizedSystemCode;
+    if (item.tracked !== undefined) variant.tracked = item.tracked;
     if (item.countryCodeOfOrigin !== undefined) variant.country_code_of_origin = item.countryCodeOfOrigin;
   };
   const userError = (name, message) => ({ [name]: { userErrors: [{ field: ["id"], message }] } });
@@ -279,6 +290,7 @@ export function fakeShopifyStore({ products = [], collections = FAKE_COLLECTIONS
         published_publication_ids: [],
       });
       applyInventoryItem(state.products.at(-1).variants[0], v.inventoryItem);
+      for (const q of v.inventoryQuantities || []) state.inventory.set(`${id * 100}:${numId(q.locationId)}`, q.quantity);
       return { productSet: { product: { id: `gid://shopify/Product/${id}` }, userErrors: [] } };
     }
     if (name === "productUpdate") {
@@ -325,6 +337,26 @@ export function fakeShopifyStore({ products = [], collections = FAKE_COLLECTIONS
       p.published_publication_ids = [...current];
       return { [name]: { userErrors: [] } };
     }
+    if (name === "inventorySetQuantities") {
+      const quantities = variables.input.quantities;
+      // Validate all first: Shopify applies the whole request or none of it.
+      for (const q of quantities) {
+        const key = `${numId(q.inventoryItemId)}:${numId(q.locationId)}`;
+        if (!variantByItem(numId(q.inventoryItemId))) return { [name]: { userErrors: [{ code: "INVALID_INVENTORY_ITEM", field: ["input"], message: "The specified inventory item could not be found." }] } };
+        if (!state.inventory.has(key)) return { [name]: { userErrors: [{ code: "ITEM_NOT_STOCKED_AT_LOCATION", field: ["input"], message: "The item is not stocked at the location." }] } };
+        if (!("changeFromQuantity" in q)) return { [name]: { userErrors: [{ code: "COMPARE_QUANTITY_REQUIRED", field: ["input"], message: "changeFromQuantity is required." }] } };
+        if (q.changeFromQuantity !== null && q.changeFromQuantity !== state.inventory.get(key)) {
+          return { [name]: { userErrors: [{ code: "CHANGE_FROM_QUANTITY_STALE", field: ["input"], message: "The quantity has changed." }] } };
+        }
+      }
+      for (const q of quantities) state.inventory.set(`${numId(q.inventoryItemId)}:${numId(q.locationId)}`, q.quantity);
+      return { [name]: { userErrors: [] } };
+    }
+    if (name === "inventoryActivate") {
+      const key = `${numId(variables.inventoryItemId)}:${numId(variables.locationId)}`;
+      if (!state.inventory.has(key)) state.inventory.set(key, variables.available ?? 0);
+      return { [name]: { userErrors: [] } };
+    }
     if (name === "productDelete") {
       const p = find(variables.input.id);
       if (!p) return { productDelete: { deletedProductId: null, userErrors: [{ field: ["id"], message: "Product does not exist" }] } };
@@ -357,6 +389,14 @@ export function fakeShopifyStore({ products = [], collections = FAKE_COLLECTIONS
       }
       base.calls.push({ url, params: options.params });
       if (url.includes("products.json")) return { data: { products: state.products }, headers: {} };
+      if (url.includes("inventory_levels.json")) {
+        const ids = (options.params?.inventory_item_ids || "").split(",");
+        const levels = [...state.inventory.entries()]
+          .map(([key, available]) => ({ key, available }))
+          .filter(({ key }) => ids.includes(key.split(":")[0]))
+          .map(({ key, available }) => ({ inventory_item_id: Number(key.split(":")[0]), location_id: Number(key.split(":")[1]), available, updated_at: tick() }));
+        return { data: { inventory_levels: levels }, headers: {} };
+      }
       return base.get(url, options);
     },
     async post(url, body) {
@@ -400,12 +440,26 @@ export function fakeShopifyStore({ products = [], collections = FAKE_COLLECTIONS
           },
         };
       }
+      if (q.includes("query SmartSellInventoryLevels")) {
+        state.mutations.push("read:InventoryLevels");
+        const itemId = numId(body.variables.id);
+        const variant = variantByItem(itemId);
+        if (!variant) return { data: { data: { inventoryItem: null } } };
+        const nodes = [...state.inventory.entries()]
+          .filter(([key]) => key.startsWith(`${itemId}:`))
+          .map(([key, quantity]) => ({ location: { id: `gid://shopify/Location/${key.split(":")[1]}` }, quantities: [{ name: "available", quantity }] }));
+        return { data: { data: { inventoryItem: { tracked: variant.tracked ?? true, inventoryLevels: { nodes } } } } };
+      }
       const read = answerProductQuery(state.products, body);
       if (read) {
         state.mutations.push("read");
         return read;
       }
-      const name = body.query.match(/(productSet|productUpdate|productVariantsBulkUpdate|productDelete|publishablePublish|publishableUnpublish|products)\(/)?.[1];
+      const name = body.query.match(/(productSet|productUpdate|productVariantsBulkUpdate|productDelete|publishablePublish|publishableUnpublish|inventorySetQuantities|inventoryActivate|products)\(/)?.[1];
+      // Since 2026-04 these require an @idempotent key.
+      if (["inventorySetQuantities", "inventoryActivate"].includes(name) && !(/@idempotent\(key: \$idempotencyKey\)/.test(body.query) && body.variables?.idempotencyKey)) {
+        return { data: { errors: [{ message: "The @idempotent directive is required for this mutation." }] } };
+      }
       state.mutations.push(name);
       state.inputs[name] = [...(state.inputs[name] || []), body.variables];
       const mode = failure(name);

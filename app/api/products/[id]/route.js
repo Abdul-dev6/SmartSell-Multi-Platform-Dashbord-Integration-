@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import Product from "@/models/Product";
+import Inventory from "@/models/Inventory";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { validateProductInput } from "@/lib/products/validation";
@@ -27,7 +28,23 @@ export async function GET(req, { params }) {
     const product = await Product.findOne({ _id: id, user: user._id }).lean();
     if (!product) return notFound();
 
-    return NextResponse.json({ success: true, product: toClientProduct(product) });
+    // Current stock per location for a single-variant product (from the
+    // inventory levels synced from Shopify), so the form can show and edit it.
+    const variants = product.variants || [];
+    const itemId = variants.length === 1 ? variants[0].inventoryItemId : null;
+    const levels = itemId
+      ? await Inventory.find({ shopifyStore: product.shopifyStore, user: user._id, inventoryItemId: String(itemId), disconnectedAt: null })
+          .select("locationId available")
+          .lean()
+      : [];
+
+    return NextResponse.json({
+      success: true,
+      product: {
+        ...toClientProduct(product),
+        inventoryLevels: levels.map((l) => ({ locationId: l.locationId, available: l.available })),
+      },
+    });
   } catch (error) {
     return productErrorResponse(error, "Get product", req);
   }
