@@ -7,10 +7,12 @@ import { deleteProductWithConfirm, shopifyAdminUrl } from "@/components/dashboar
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { ListProgress, useIncrementalList } from "@/components/dashboard/shared/useIncrementalList";
 
 export default function ProductTable({ ProductData = [], onChanged }) {
   const [deletingId, setDeletingId] = useState(null);
   const [error, setError] = useState(null);
+  const { visible, setRoot, setSentinel, shown, total, hasMore } = useIncrementalList(ProductData);
 
   // Shopify product statuses.
   const badgeColor = (status) => {
@@ -53,15 +55,16 @@ export default function ProductTable({ ProductData = [], onChanged }) {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="mt-8 overflow-x-auto rounded-2xl bg-white shadow-lg border border-slate-200"
+      className="mt-8 rounded-2xl bg-white shadow-lg border border-slate-200 overflow-hidden"
     >
       {error && (
         <p role="alert" className="border-b border-red-200 bg-red-50 px-6 py-3 text-sm text-red-800">
           {error}
         </p>
       )}
+      <div ref={setRoot} className="max-h-[30rem] overflow-auto">
       <table className="w-full min-w-[920px]">
-        <thead className="bg-slate-100">
+        <thead className="sticky top-0 z-10 bg-slate-100">
           <tr>
             <th className="px-6 py-4 text-left">Product</th>
 
@@ -80,7 +83,7 @@ export default function ProductTable({ ProductData = [], onChanged }) {
         </thead>
 
         <tbody>
-          {ProductData.map((item) => (
+          {visible.map((item) => (
             <motion.tr
               key={item.row_id ?? item.id}
               whileHover={{
@@ -167,6 +170,9 @@ export default function ProductTable({ ProductData = [], onChanged }) {
           ))}
         </tbody>
       </table>
+      <div ref={setSentinel} aria-hidden="true" className="h-px" />
+      </div>
+      <ListProgress shown={shown} total={total} hasMore={hasMore} />
     </motion.div>
   );
 }

@@ -3,12 +3,13 @@ import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { getActiveStores } from "@/lib/catalog";
 import { getWebhookCallbackUrl, registerStoreWebhooks } from "@/lib/shopify/webhookRegistration";
 import { logError } from "@/lib/observability/log";
+import { withNotification } from "@/lib/notifyRoute";
 
 export const maxDuration = 30;
 
 // (Re)registers Shopify webhooks for the signed-in user's stores, e.g. after
 // the app's public URL changes. Safe to repeat.
-export async function POST(req) {
+async function handlePOST(req) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
@@ -44,3 +45,6 @@ export async function POST(req) {
     return NextResponse.json({ success: false, message: "Could not set up live updates." }, { status: 500 });
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const POST = withNotification(handlePOST, () => ({ success: "Live updates are active", failure: "Live updates could not be set up" }));

@@ -3,12 +3,13 @@ import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { MAX_IMAGE_BYTES, uploadProductImage } from "@/lib/products/images";
 import { productErrorResponse, productWriteLimit } from "@/lib/products/http";
 import { toClientProduct } from "@/lib/products/service";
+import { withNotification } from "@/lib/notifyRoute";
 
 export const maxDuration = 60;
 
 // Uploads one image (multipart/form-data field "image", optional "alt") to
 // the user's Shopify product.
-export async function POST(req, { params }) {
+async function handlePOST(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
@@ -49,3 +50,6 @@ export async function POST(req, { params }) {
     return productErrorResponse(error, "Upload product image", req);
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const POST = withNotification(handlePOST, (b) => ({ success: `Image added to “${b.product?.title}”`, failure: "Image not uploaded" }));

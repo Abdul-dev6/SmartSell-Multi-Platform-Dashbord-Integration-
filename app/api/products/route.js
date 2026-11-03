@@ -8,13 +8,14 @@ import {
   productWriteLimit,
   validationErrorResponse,
 } from "@/lib/products/http";
+import { withNotification } from "@/lib/notifyRoute";
 
 export const maxDuration = 30;
 
 // Creates a product in the user's Shopify store, then stores it in MongoDB.
 // The request must carry an idempotencyKey; repeating it never creates a
 // second Shopify product.
-export async function POST(req) {
+async function handlePOST(req) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
@@ -34,3 +35,6 @@ export async function POST(req) {
     return productErrorResponse(error, "Create product", req);
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const POST = withNotification(handlePOST, (b) => ({ success: b.partial ? `“${b.product?.title}” created; sales channels need a retry` : `“${b.product?.title}” created in Shopify`, failure: "Product not created" }));

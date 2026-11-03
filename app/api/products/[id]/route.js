@@ -12,6 +12,7 @@ import {
   productWriteLimit,
   validationErrorResponse,
 } from "@/lib/products/http";
+import { withNotification } from "@/lib/notifyRoute";
 
 export const maxDuration = 30;
 
@@ -51,7 +52,7 @@ export async function GET(req, { params }) {
 }
 
 // Updates only the fields present in the request.
-export async function PATCH(req, { params }) {
+async function handlePATCH(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
@@ -78,7 +79,7 @@ export async function PATCH(req, { params }) {
 
 // Deletes the product from Shopify and archives it in SmartSell. Requires
 // { "confirm": true } so it cannot be triggered by accident.
-export async function DELETE(req, { params }) {
+async function handleDELETE(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
@@ -100,3 +101,7 @@ export async function DELETE(req, { params }) {
     return productErrorResponse(error, "Delete product", req);
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const PATCH = withNotification(handlePATCH, (b) => ({ success: `“${b.product?.title}” updated`, failure: "Product not updated" }));
+export const DELETE = withNotification(handleDELETE, (b) => ({ success: `“${b.product?.title}” deleted from Shopify`, failure: "Product not deleted" }));

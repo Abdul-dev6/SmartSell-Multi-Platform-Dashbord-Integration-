@@ -5,13 +5,14 @@ import { getActiveStores } from "@/lib/catalog";
 import { syncStore } from "@/lib/shopify/syncStore";
 import { processDueEvents } from "@/lib/webhooks/queue";
 import { logError } from "@/lib/observability/log";
+import { withNotification } from "@/lib/notifyRoute";
 
 // Large catalogs take time; 60s is within every Vercel plan's limit.
 export const maxDuration = 60;
 
 // Pulls products, inventory and orders from Shopify into MongoDB for the
 // signed-in user's stores (or one store when `storeId` is given).
-export async function POST(req) {
+async function handlePOST(req) {
   try {
     const { user, response } = await requireUser(req);
     if (response) {
@@ -72,3 +73,6 @@ export async function POST(req) {
     );
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const POST = withNotification(handlePOST, (b) => ({ success: b.message === "Sync complete." ? "Sync complete" : "Sync finished with some errors", failure: "Sync failed", message: (b.results || []).flatMap((r) => r.errors || []).join(" ") }));

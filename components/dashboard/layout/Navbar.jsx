@@ -8,6 +8,7 @@ import { FaBars } from "react-icons/fa6";
 import { FiUser, FiBell, FiHelpCircle, FiLogOut } from "react-icons/fi";
 import { PanelContext } from "@/components/dashboard/PanelContext";
 import UserInitials from "@/components/dashboard/layout/UserInitials";
+import { useNotifications } from "@/components/dashboard/layout/Notifications";
 
 // Page titles shown in the top bar, by route.
 const PAGE_TITLES = [
@@ -82,9 +83,7 @@ function Navbar() {
     router.push(href);
   };
 
-  const datanotification = [];
-
-  const unreadCount = datanotification.filter((n) => n.unread).length;
+  const { notifications: datanotification, unread: unreadCount, markAllRead } = useNotifications();
 
   const handleLogout = async () => {
     try {
@@ -194,6 +193,11 @@ function Navbar() {
                       </span>
                     )}
                   </div>
+                  {unreadCount > 0 && (
+                    <button type="button" onClick={markAllRead} className="text-xs font-medium text-indigo-600 hover:underline">
+                      Mark all read
+                    </button>
+                  )}
                 </div>
 
                 {/* Items */}
@@ -201,35 +205,25 @@ function Navbar() {
                   {datanotification.length === 0 && (
                     <p className="px-4 py-6 text-center text-xs text-slate-500">No notifications.</p>
                   )}
-                  {datanotification.map((item, index) => (
+                  {datanotification.map((item) => (
                     <div
-                      key={index}
-                      className={`flex items-start gap-3 px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer ${item.unread ? "bg-indigo-50/50" : ""}`}
+                      key={item.id}
+                      className={`flex items-start gap-3 px-4 py-3 ${item.read ? "" : "bg-indigo-50/50"}`}
                     >
-                      <div
-                        className="w-9 h-9 rounded-full bg-cover bg-center border-2 border-slate-200 shrink-0"
-                        style={{ backgroundImage: `url(${item.src})` }}
-                      />
+                      <span
+                        aria-hidden="true"
+                        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                          item.type === "error" ? "bg-red-100 text-red-600" : item.type === "success" ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {item.type === "error" ? "✕" : item.type === "success" ? "✓" : "i"}
+                      </span>
                       <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-xs font-semibold ${
-                            item.title === "successful"
-                              ? "text-emerald-600"
-                              : item.title === "cancel"
-                              ? "text-red-500"
-                              : "text-amber-500"
-                          }`}
-                        >
-                          {item.title === "successful" ? "✓ Success" : item.title === "cancel" ? "✕ Cancelled" : item.title}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5 truncate">
-                          {item.description}
-                        </p>
-                        <p className="text-[10px] text-slate-400 mt-1">{item.time}</p>
+                        <p className={`text-xs font-semibold ${item.type === "error" ? "text-red-600" : "text-slate-800"}`}>{item.title}</p>
+                        {item.message && <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{item.message}</p>}
+                        <p className="text-[10px] text-slate-400 mt-1">{new Date(item.createdAt).toLocaleString()}</p>
                       </div>
-                      {item.unread && (
-                        <span className="w-2 h-2 bg-indigo-500 rounded-full shrink-0 mt-1" />
-                      )}
+                      {!item.read && <span className="w-2 h-2 bg-indigo-500 rounded-full shrink-0 mt-1" />}
                     </div>
                   ))}
                 </div>

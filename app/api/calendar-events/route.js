@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { toClientEvent, validateCalendarEvent } from "@/lib/calendarEvents";
 import { logError } from "@/lib/observability/log";
+import { withNotification } from "@/lib/notifyRoute";
 
 const MAX_EVENTS = 1000;
 
@@ -20,7 +21,7 @@ export async function GET(req) {
   }
 }
 
-export async function POST(req) {
+async function handlePOST(req) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
@@ -47,3 +48,6 @@ export async function POST(req) {
     return NextResponse.json({ success: false, message: "Could not save the event." }, { status: 500 });
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const POST = withNotification(handlePOST, (b) => ({ success: `Event “${b.event?.title}” added`, failure: "Event not added" }));

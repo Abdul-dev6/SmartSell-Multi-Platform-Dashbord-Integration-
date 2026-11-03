@@ -5,6 +5,7 @@ import { PanelContext } from "@/components/dashboard/PanelContext";
 
 import Sidebar from "@/components/dashboard/layout/Sidebar";
 import Navbar from "@/components/dashboard/layout/Navbar";
+import { NotificationsProvider } from "@/components/dashboard/layout/Notifications";
 
 export default function PanelLayout({ children }) {
   const [bar, setbar] = useState(true);
@@ -36,6 +37,7 @@ export default function PanelLayout({ children }) {
 
   return (
     <PanelContext.Provider value={{ bar, setbar, setting, setSetting, currentUser }}>
+      <NotificationsProvider>
       <div className="min-h-screen w-full overflow-x-hidden bg-slate-50">
         <div className="min-h-screen">
           <Sidebar />
@@ -48,6 +50,7 @@ export default function PanelLayout({ children }) {
           </div>
         </div>
       </div>
+      </NotificationsProvider>
     </PanelContext.Provider>
   );
 }

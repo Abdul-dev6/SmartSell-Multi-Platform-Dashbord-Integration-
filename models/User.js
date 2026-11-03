@@ -10,6 +10,11 @@ const userschema = new mongoose.Schema(
     // Raised by "Sign out everywhere"; sessions carrying an older value are
     // no longer accepted.
     sessionVersion: { type: Number, default: 0 },
+    // Business settings used by the dashboard's calculated expenses.
+    settings: {
+      // Packaging cost per item shipped, in the store currency.
+      packagingCostPerItem: { type: Number, default: 0, min: 0 },
+    },
   },
   { timestamps: true },
 );

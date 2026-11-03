@@ -96,6 +96,13 @@ const ProductSchema = new mongoose.Schema(
       default: {},
     },
 
+    // Cost per item per variant ID (Shopify unit cost; null = not set).
+    // Used to calculate product cost in the dashboard's expenses.
+    variantCosts: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+
     rawData: {
       type: mongoose.Schema.Types.Mixed,
     },

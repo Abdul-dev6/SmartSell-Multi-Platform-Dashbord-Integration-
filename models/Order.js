@@ -9,6 +9,7 @@ const LineItemSchema = new mongoose.Schema(
     sku: String,
     quantity: Number,
     price: Number,
+    fulfillableQuantity: Number,
   },
   { _id: false },
 );
@@ -63,6 +64,9 @@ const OrderSchema = new mongoose.Schema(
     financialStatus: String,
     fulfillmentStatus: String,
     cancelledAt: Date,
+    // Payment processing fees Shopify charged on this order's transactions
+    // (shop currency). null = not read yet.
+    shopifyFees: Number,
     // Set when the order was deleted in Shopify (webhook or reconciliation).
     // The record is kept but excluded from every view and figure.
     deletedAt: Date,

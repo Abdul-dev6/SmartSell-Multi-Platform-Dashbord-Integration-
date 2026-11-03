@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
+import { ListProgress, useIncrementalList } from "@/components/dashboard/shared/useIncrementalList";
 
 /* ── constants ── */
 const MONTHS = [
@@ -81,7 +82,9 @@ function DateRow({ label, y, m, d, setY, setM, setD }) {
       >
         {Array.from({ length: getDaysInMonth(y, m) }, (_, i) => i + 1).map(
           (dd) => (
-            <option key={dd}>{pad(dd)}</option>
+            // The value must be the number: the label "04" would not match
+            // the selected day 4, which made days 1–9 impossible to pick.
+            <option key={dd} value={dd}>{pad(dd)}</option>
           ),
         )}
       </select>
@@ -92,7 +95,7 @@ function DateRow({ label, y, m, d, setY, setM, setD }) {
         className="w-20 border border-gray-200 rounded-lg px-1 py-2 text-sm bg-gray-50 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
       >
         {years.map((yr) => (
-          <option key={yr}>{yr}</option>
+          <option key={yr} value={yr}>{yr}</option>
         ))}
       </select>
     </div>
@@ -432,6 +435,7 @@ export default function UpcomingEvents() {
   const firstDay = getFirstDay(viewYear, viewMonth);
   const totalCells = Math.ceil((firstDay + dim) / 7) * 7;
   const upcoming = events.filter((e) => e.endDate >= TODAY);
+  const { visible: upcomingVisible, setRoot: upcomingSetRoot, setSentinel: upcomingSetSentinel, shown: upcomingShown, total: upcomingTotal, hasMore: upcomingHasMore } = useIncrementalList(upcoming);
 
   const isCurrentMonth =
     viewYear === now.getFullYear() && viewMonth === now.getMonth();
@@ -605,11 +609,11 @@ export default function UpcomingEvents() {
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 shrink-0">
                 Upcoming Events
               </p>
-              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full pr-2">
+              <div ref={upcomingSetRoot} className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full pr-2">
                 {upcoming.length === 0 && (
                   <p className="text-gray-300 text-sm">No upcoming events</p>
                 )}
-                {upcoming.map((ev, i) => (
+                {upcomingVisible.map((ev, i) => (
                   <div
                     key={ev.id || i}
                     className={`flex gap-3 items-start py-3 ${i < upcoming.length - 1 ? "border-b border-gray-50" : ""}`}
@@ -651,7 +655,9 @@ export default function UpcomingEvents() {
                     </button>
                   </div>
                 ))}
+                <div ref={upcomingSetSentinel} aria-hidden="true" className="h-px" />
               </div>
+              <ListProgress shown={upcomingShown} total={upcomingTotal} hasMore={upcomingHasMore} />
             </div>
 
             {/* color legend */}

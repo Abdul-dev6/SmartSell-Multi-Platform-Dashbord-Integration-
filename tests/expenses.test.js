@@ -106,14 +106,15 @@ describe("routes", () => {
   });
 });
 
-describe("dashboard profit uses expenses", () => {
-  it("subtracts same-currency expenses in the right month and ignores other currencies", async () => {
+describe("dashboard expenses are calculated, not entered", () => {
+  it("manually entered expenses no longer count toward the dashboard", async () => {
     const { user, store, cookie } = await userWithStore("PKR");
     await upsertShopifyOrders(store, [shopifyOrder(1, { created_at: "2026-11-01T15:00:00Z", current_total_price: "1000.00", currency: "PKR" })]);
     await create(req("POST", "/api/expenses", cookie, { date: "2026-11-01", category: "advertising", amount: "250" }));
     await create(req("POST", "/api/expenses", cookie, { date: "2026-11-02", category: "software", amount: "99", currency: "USD" }));
 
     const summary = await getDashboardSummary(user._id, await getActiveStores(user._id), { now: new Date("2026-11-03T12:00:00Z") });
-    expect(summary.current).toMatchObject({ revenue: 1000, expense: 250, profit: 750, ProfitMargin: 75, Roi: 300 });
+    // No cost per item, fees or packaging rate: calculated expenses are 0.
+    expect(summary.current).toMatchObject({ revenue: 1000, expense: 0, profit: 1000, ProfitMargin: 100, Roi: null });
   });
 });

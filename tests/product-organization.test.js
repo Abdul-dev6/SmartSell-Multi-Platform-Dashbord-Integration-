@@ -99,7 +99,7 @@ describe("validation", () => {
 
   it("no longer reports category, collection, weight or HS code as not sent", () => {
     const { notSent } = create({ category: MUGS, weight: "1", weightUnit: "GRAMS", hsCode: "691200", length: "3", cost: "1" });
-    expect([...notSent].sort()).toEqual(["cost per item", "package dimensions"]);
+    expect(notSent).toEqual(["package dimensions"]); // cost is sent to Shopify now
   });
 });
 

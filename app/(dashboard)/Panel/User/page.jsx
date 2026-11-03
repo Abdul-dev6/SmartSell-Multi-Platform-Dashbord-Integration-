@@ -11,6 +11,127 @@ function initials(name, email) {
   return (parts.length > 1 ? parts[0][0] + parts[1][0] : source.slice(0, 2)).toUpperCase();
 }
 
+const inputClass = "w-full rounded-xl border border-slate-300 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500";
+
+async function send(url, method, body) {
+  const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.success) throw new Error(data.message || "Could not save.");
+  return data;
+}
+
+// Name and business settings.
+function EditProfile({ user, onSaved }) {
+  const [name, setName] = useState(user.name || "");
+  const [packaging, setPackaging] = useState(String(user.settings?.packagingCostPerItem ?? 0));
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  const save = async (e) => {
+    e.preventDefault();
+    setBusy(true);
+    setMessage(null);
+    try {
+      await send("/api/auth/me", "PATCH", { name, packagingCostPerItem: packaging.trim() || "0" });
+      setMessage({ type: "success", text: "Profile saved." });
+      onSaved?.();
+    } catch (err) {
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={save} className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+      <h2 className="text-xl font-semibold text-slate-900">Edit profile</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="profile-name" className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+          <input id="profile-name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label htmlFor="profile-email" className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+          <input id="profile-email" value={user.email} disabled className={`${inputClass} bg-slate-50 text-slate-500`} />
+          <p className="mt-1 text-xs text-slate-500">Your email is how you sign in and can&apos;t be changed here.</p>
+        </div>
+        <div>
+          <label htmlFor="profile-packaging" className="block text-sm font-medium text-slate-700 mb-1">Packaging cost per item</label>
+          <input id="profile-packaging" type="number" min="0" step="0.01" inputMode="decimal" value={packaging} onChange={(e) => setPackaging(e.target.value)} className={inputClass} />
+          <p className="mt-1 text-xs text-slate-500">In your store currency. Used to calculate packaging expenses for every item shipped.</p>
+        </div>
+      </div>
+      {message && (
+        <p role={message.type === "error" ? "alert" : "status"} className={`text-sm ${message.type === "error" ? "text-red-700" : "text-emerald-700"}`}>
+          {message.text}
+        </p>
+      )}
+      <button type="submit" disabled={busy} className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
+        {busy ? "Saving…" : "Save profile"}
+      </button>
+    </form>
+  );
+}
+
+// Password change for email/password accounts.
+function ChangePassword() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  const save = async (e) => {
+    e.preventDefault();
+    if (next !== confirm) {
+      setMessage({ type: "error", text: "The new passwords don't match." });
+      return;
+    }
+    setBusy(true);
+    setMessage(null);
+    try {
+      const data = await send("/api/auth/password", "POST", { currentPassword: current, newPassword: next });
+      setMessage({ type: "success", text: data.message });
+      setCurrent("");
+      setNext("");
+      setConfirm("");
+    } catch (err) {
+      setMessage({ type: "error", text: err.message });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <form onSubmit={save} className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+      <h2 className="text-xl font-semibold text-slate-900">Change password</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="pw-current" className="block text-sm font-medium text-slate-700 mb-1">Current password</label>
+          <input id="pw-current" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={inputClass} required />
+        </div>
+        <div>
+          <label htmlFor="pw-new" className="block text-sm font-medium text-slate-700 mb-1">New password</label>
+          <input id="pw-new" type="password" autoComplete="new-password" minLength={8} maxLength={72} value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} required />
+        </div>
+        <div>
+          <label htmlFor="pw-confirm" className="block text-sm font-medium text-slate-700 mb-1">Confirm new password</label>
+          <input id="pw-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} required />
+        </div>
+      </div>
+      <p className="text-xs text-slate-500">Changing your password signs you out on all other devices.</p>
+      {message && (
+        <p role={message.type === "error" ? "alert" : "status"} className={`text-sm ${message.type === "error" ? "text-red-700" : "text-emerald-700"}`}>
+          {message.text}
+        </p>
+      )}
+      <button type="submit" disabled={busy} className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60">
+        {busy ? "Saving…" : "Change password"}
+      </button>
+    </form>
+  );
+}
+
 // Ends every session of this account, on all devices, then returns to Login.
 function SignOutEverywhere() {
   const [busy, setBusy] = useState(false);
@@ -138,6 +259,10 @@ const Userprofile = () => {
               </p>
             )}
           </div>
+
+          <EditProfile key={`${user.name}|${user.settings?.packagingCostPerItem}`} user={user} onSaved={reload} />
+
+          {user.signInMethod === "password" && <ChangePassword />}
 
           <SignOutEverywhere />
         </>

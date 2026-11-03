@@ -52,10 +52,11 @@ export const EMPTY_FORM = {
 // Shopify and reports anything it could not send.
 const BASIC = [
   "title", "description", "vendor", "productType", "tags", "status",
-  "price", "comparePrice", "cost", "sku", "barcode",
+  "price", "comparePrice", "sku", "barcode",
   "continueSelling", "seoTitle", "seoDescription", "handle",
 ];
-const SHIPPING = ["requiresShipping", "weight", "weightUnit", "countryOfOrigin", "hsCode"];
+// Per-variant fields (single-variant products only).
+const SHIPPING = ["cost", "requiresShipping", "weight", "weightUnit", "countryOfOrigin", "hsCode"];
 
 export function formFromProduct(product) {
   const shipping = product.shipping || {};
@@ -74,6 +75,7 @@ export function formFromProduct(product) {
     publicationsKnown: Boolean(product.publishedOnKnown),
     price: product.price ?? "",
     comparePrice: product.comparePrice ?? "",
+    cost: product.cost ?? "",
     sku: product.sku ?? "",
     barcode: product.barcode ?? "",
     handle: product.handle || "",

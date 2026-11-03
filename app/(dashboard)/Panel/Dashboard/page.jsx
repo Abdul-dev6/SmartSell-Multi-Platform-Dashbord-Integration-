@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { FaArrowTrendUp } from "react-icons/fa6";
 
@@ -27,45 +28,51 @@ import useApiData from "@/components/dashboard/shared/useApiData";
 import { formatMoney } from "@/components/dashboard/shared/format";
 
 function Dashboard() {
-  const { body, error, loading, reload } = useApiData("/api/dashboard/summary");
+  // "all" (default) or "YYYY-MM": which period the cards show.
+  const [period, setPeriod] = useState("all");
+  const { body, error, loading, reload } = useApiData(`/api/dashboard/summary?period=${encodeURIComponent(period)}`);
   const summary = body?.data;
   const currency = summary?.currency;
   const chartData = summary?.monthly || [];
-  const vsLastMonth = "vs last month";
+  const figures = summary?.selected;
+  const change = summary?.selectedChange;
+  const label = summary?.period?.label;
+  const comparison = change ? "vs previous month" : "";
 
-  const cards = summary
+  const cards = figures
     ? [
         {
-          title: `Revenue (${summary.monthLabel})`,
-          value: formatMoney(summary.current.revenue, currency),
-          percentage: summary.change.revenue,
-          month: vsLastMonth,
+          title: `Revenue (${label})`,
+          value: formatMoney(figures.revenue, currency),
+          percentage: change?.revenue ?? null,
+          month: comparison,
           icon: FaArrowTrendUp,
         },
         {
-          title: `Orders (${summary.monthLabel})`,
-          value: summary.current.orders.toLocaleString(),
-          percentage: summary.change.orders,
-          month: vsLastMonth,
+          title: `Orders (${label})`,
+          value: figures.orders.toLocaleString(),
+          percentage: change?.orders ?? null,
+          month: comparison,
           icon: MdOutlineInsertChart,
         },
         {
-          title: "Avg. Order Value",
-          value: formatMoney(summary.current.averageOrderValue, currency),
-          percentage: summary.change.averageOrderValue,
-          month: vsLastMonth,
+          title: `Avg. Order Value (${label})`,
+          value: formatMoney(figures.averageOrderValue, currency),
+          percentage: change?.averageOrderValue ?? null,
+          month: comparison,
           icon: LuChartSpline,
         },
         {
-          title: `Expenses (${summary.monthLabel})`,
-          value: formatMoney(summary.current.expense, currency),
-          percentage: summary.change.expense,
-          month: vsLastMonth,
+          title: `Expenses (${label})`,
+          value: formatMoney(figures.expense, currency),
+          percentage: change?.expense ?? null,
+          month: comparison,
           icon: LuChartNoAxesCombined,
           goodWhenUp: false,
         },
       ]
     : [];
+  const costs = figures?.costs;
 
   return (
     <div className="flex flex-col gap-6 px-4 sm:px-6 lg:px-8 py-6 bg-slate-50 min-h-screen">
@@ -103,6 +110,26 @@ function Dashboard() {
         </p>
       )}
 
+      {/* ── Period ── */}
+      {summary && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label htmlFor="dashboard-period" className="text-sm font-medium text-slate-700">
+            Showing
+          </label>
+          <select
+            id="dashboard-period"
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="all">All time</option>
+            {(summary.availableMonths || []).map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* ── Stat Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
         {cards.map((item, index) => (
@@ -118,6 +145,30 @@ function Dashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* ── How expenses were calculated ── */}
+      {costs && (
+        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-700">
+          <p className="font-semibold text-slate-800">Expenses ({label}) — calculated automatically</p>
+          <dl className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div><dt className="text-xs text-slate-500">Product cost</dt><dd>{formatMoney(costs.productCost, currency)}</dd></div>
+            <div><dt className="text-xs text-slate-500">Shopify fees</dt><dd>{formatMoney(costs.shopifyFees, currency)}</dd></div>
+            <div>
+              <dt className="text-xs text-slate-500">Packaging ({costs.shippedUnits} shipped × {formatMoney(summary.packagingCostPerItem, currency)})</dt>
+              <dd>{formatMoney(costs.packaging, currency)}</dd>
+            </div>
+          </dl>
+          {costs.unitsWithoutCost > 0 && (
+            <p className="mt-2 text-xs text-amber-700">
+              {costs.unitsWithoutCost} unit{costs.unitsWithoutCost === 1 ? "" : "s"} sold have no Cost per item, so their product cost is not
+              included. Set the cost on the product&apos;s edit page.
+            </p>
+          )}
+          {!summary.packagingCostPerItem && (
+            <p className="mt-1 text-xs text-slate-500">Set a packaging cost per item in your profile to include packaging.</p>
+          )}
+        </div>
+      )}
 
       {/* ── Charts Row ── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">

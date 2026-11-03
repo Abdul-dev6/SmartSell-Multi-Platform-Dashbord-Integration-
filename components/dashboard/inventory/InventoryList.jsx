@@ -1,6 +1,7 @@
 "use client";
 
 import InventoryRow from "@/components/dashboard/inventory/InventoryRow";
+import { ListProgress, useIncrementalList } from "@/components/dashboard/shared/useIncrementalList";
 
 export default function InventoryList({ inventorydata = [] }) {
   const rows = inventorydata.map((item) => ({
@@ -18,11 +19,17 @@ export default function InventoryList({ inventorydata = [] }) {
     Location: item.location_name || item.location_id || "Not available",
   }));
 
+  const { visible, setRoot, setSentinel, shown, total, hasMore } = useIncrementalList(rows);
+
   return (
-    <div className="mt-8 space-y-6">
-      {rows.map((product) => (
-        <InventoryRow key={product.row_id ?? product.id} product={product} />
-      ))}
+    <div className="mt-8">
+      <div ref={setRoot} className="max-h-[75vh] overflow-y-auto space-y-6 pr-1">
+        {visible.map((product) => (
+          <InventoryRow key={product.row_id ?? product.id} product={product} />
+        ))}
+        <div ref={setSentinel} aria-hidden="true" className="h-px" />
+      </div>
+      <ListProgress shown={shown} total={total} hasMore={hasMore} />
     </div>
   );
 }

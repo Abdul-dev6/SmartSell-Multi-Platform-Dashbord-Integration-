@@ -13,6 +13,7 @@ import {
 } from "@/lib/shopify/oauth";
 import { linkStore, StoreOwnershipError } from "@/lib/shopify/stores";
 import { registerStoreWebhooks } from "@/lib/shopify/webhookRegistration";
+import { notify } from "@/lib/notifications";
 import { logError } from "@/lib/observability/log";
 
 function redirectToIntegration(req, params) {
@@ -72,6 +73,7 @@ export async function GET(req) {
     // Subscribe to product/uninstall webhooks. Never fails the connection;
     // the outcome is stored on the store and shown on the Integrations page.
     await registerStoreWebhooks({ _id: store._id, shop, accessToken });
+    await notify(user._id, "success", `Shopify store ${shop} connected`, `Permissions granted: ${scope || "none"}.`);
 
     return redirectToIntegration(req, { connected: "shopify" });
   } catch (error) {

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useContext } from "react";
 import { usePathname } from "next/navigation";
-import { FaChartBar, FaRegUser, FaReceipt } from "react-icons/fa";
+import { FaChartBar, FaRegUser } from "react-icons/fa";
 import { LuLayoutDashboard } from "react-icons/lu";
 import { CiCalendar, CiSettings } from "react-icons/ci";
 import { FiShoppingBag } from "react-icons/fi";
@@ -22,7 +22,6 @@ const ECOMMERCE_LINKS = [
 const ANALYSIS_LINKS = [{ label: "Reports", href: "/Panel/Analysis/Reports" }];
 
 const OTHER_LINKS = [
-  { icon: FaReceipt, label: "Expenses", href: "/Panel/Expenses" },
   { icon: FaRegUser, label: "Profile", href: "/Panel/User" },
   { icon: CiCalendar, label: "Calendar", href: "/Panel/Calendar" },
 ];

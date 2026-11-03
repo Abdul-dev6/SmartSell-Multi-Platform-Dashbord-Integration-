@@ -3,8 +3,9 @@ import mongoose from "mongoose";
 import CalendarEvent from "@/models/CalendarEvent";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { logError } from "@/lib/observability/log";
+import { withNotification } from "@/lib/notifyRoute";
 
-export async function DELETE(req, { params }) {
+async function handleDELETE(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) return response;
@@ -22,3 +23,6 @@ export async function DELETE(req, { params }) {
     return NextResponse.json({ success: false, message: "Could not delete the event." }, { status: 500 });
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const DELETE = withNotification(handleDELETE, () => ({ success: "Event deleted", failure: "Event not deleted" }));

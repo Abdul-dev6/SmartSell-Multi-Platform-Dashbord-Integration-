@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { disconnectStore } from "@/lib/shopify/stores";
 import { logError } from "@/lib/observability/log";
+import { withNotification } from "@/lib/notifyRoute";
 
 // Disconnects one of the signed-in user's Shopify stores.
-export async function DELETE(req, { params }) {
+async function handleDELETE(req, { params }) {
   try {
     const { user, response } = await requireUser(req);
     if (response) {
@@ -38,3 +39,6 @@ export async function DELETE(req, { params }) {
     );
   }
 }
+
+// Each outcome is recorded as a notification (toast + bell).
+export const DELETE = withNotification(handleDELETE, (b) => ({ success: `Store ${b.shop || ""} disconnected`, failure: "Store not disconnected", message: b.message }));
