@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import Shopifystore from "@/models/ShopifyUser";
+import Shopifystore from "@/models/ShopifyStore";
 import { GetCurrentUser } from "@/lib/auth/GetCurrentUser";
 import {
   createOAuthState,
   getShopifyOAuthConfig,
   normalizeShopDomain,
   setOAuthStateCookie,
-} from "@/lib/Shopify/oauth";
+} from "@/lib/shopify/oauth";
 
 function redirectToIntegration(req, params) {
   const url = new URL("/Panel/Ecommerce/Integration", req.url);

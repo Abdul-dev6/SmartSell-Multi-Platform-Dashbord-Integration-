@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { safeEqual } from "@/lib/Shopify/oauth";
+import { safeEqual } from "@/lib/shopify/oauth";
 import { processDueEvents } from "@/lib/webhooks/queue";
 
 export const maxDuration = 60;

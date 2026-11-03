@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { getActiveStores } from "@/lib/catalog";
-import { getWebhookCallbackUrl, registerStoreWebhooks } from "@/lib/Shopify/webhookRegistration";
+import { getWebhookCallbackUrl, registerStoreWebhooks } from "@/lib/shopify/webhookRegistration";
 
 export const maxDuration = 30;
 

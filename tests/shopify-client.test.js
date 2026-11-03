@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { backoffDelay, createClient } from "@/lib/Shopify/client";
-import { getShopifyApiVersion } from "@/lib/Shopify/config";
+import { backoffDelay, createClient } from "@/lib/shopify/client";
+import { getShopifyApiVersion } from "@/lib/shopify/config";
 import {
   assertNoUserErrors,
   gidToId,
   shopifyGraphql,
   ShopifyGraphQLError,
   throttleWaitMs,
-} from "@/lib/Shopify/graphql";
-import { Getinventory } from "@/lib/Shopify/inventory";
+} from "@/lib/shopify/graphql";
+import { Getinventory } from "@/lib/shopify/inventory";
 
 // Replaces axios' network layer: each call returns the next scripted result.
 function scriptedClient(results) {

@@ -10,9 +10,9 @@ import {
   readOAuthState,
   safeEqual,
   verifyOAuthQueryHmac,
-} from "@/lib/Shopify/oauth";
-import { linkStore, StoreOwnershipError } from "@/lib/Shopify/stores";
-import { registerStoreWebhooks } from "@/lib/Shopify/webhookRegistration";
+} from "@/lib/shopify/oauth";
+import { linkStore, StoreOwnershipError } from "@/lib/shopify/stores";
+import { registerStoreWebhooks } from "@/lib/shopify/webhookRegistration";
 
 function redirectToIntegration(req, params) {
   const url = new URL("/Panel/Ecommerce/Integration", req.url);

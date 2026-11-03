@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
-import { getShopifyOAuthConfig } from "@/lib/Shopify/oauth";
-import { listStoresForUser } from "@/lib/Shopify/stores";
-import { getWebhookCallbackUrl, WEBHOOK_TOPICS } from "@/lib/Shopify/webhookRegistration";
+import { getShopifyOAuthConfig } from "@/lib/shopify/oauth";
+import { listStoresForUser } from "@/lib/shopify/stores";
+import { getWebhookCallbackUrl, WEBHOOK_TOPICS } from "@/lib/shopify/webhookRegistration";
 
 const REQUIRED_TOPICS = Object.values(WEBHOOK_TOPICS);
 

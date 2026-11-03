@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
-import { getActiveStoreForUser } from "@/lib/Shopify/stores";
-import { createClient } from "@/lib/Shopify/client";
-import { Getproducts } from "@/lib/Shopify/products";
-import { Getorders } from "@/lib/Shopify/order";
-import { getInventoryPageData } from "@/lib/Shopify/Getinventorypagedata";
+import { getActiveStoreForUser } from "@/lib/shopify/stores";
+import { createClient } from "@/lib/shopify/client";
+import { Getproducts } from "@/lib/shopify/products";
+import { Getorders } from "@/lib/shopify/order";
+import { getInventoryPageData } from "@/lib/shopify/Getinventorypagedata";
 
 // Shopify's raw error bodies are not forwarded to the browser.
 function shopifyErrorResponse(error) {

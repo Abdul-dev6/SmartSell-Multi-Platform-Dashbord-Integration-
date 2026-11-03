@@ -1,11 +1,11 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it } from "vitest";
-import Expense from "@/models/Expensive";
-import Shopifystore from "@/models/ShopifyUser";
+import Expense from "@/models/Expense";
+import Shopifystore from "@/models/ShopifyStore";
 import Order from "@/models/Order";
-import { linkStore } from "@/lib/Shopify/stores";
+import { linkStore } from "@/lib/shopify/stores";
 import { parseExpenseDate, validateExpense } from "@/lib/expenses";
-import { upsertShopifyOrders } from "@/lib/Shopify/ordersync";
+import { upsertShopifyOrders } from "@/lib/shopify/ordersync";
 import { getActiveStores } from "@/lib/catalog";
 import { getDashboardSummary } from "@/lib/analytics/dashboard";
 import { GET as list, POST as create } from "@/app/api/expenses/route";

@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import { beforeEach, describe, expect, it } from "vitest";
-import Product from "@/models/Products";
+import Product from "@/models/Product";
 import WebhookEvent from "@/models/WebhookEvent";
-import { linkStore } from "@/lib/Shopify/stores";
-import { syncProducts } from "@/lib/Shopify/syncProduct";
+import { linkStore } from "@/lib/shopify/stores";
+import { syncProducts } from "@/lib/shopify/syncProduct";
 import { getInventoryRows } from "@/lib/catalog";
 import { migrate } from "@/scripts/migrations/stage4-indexes.mjs";
 import { createUser, resetDatabase } from "./helpers/db";

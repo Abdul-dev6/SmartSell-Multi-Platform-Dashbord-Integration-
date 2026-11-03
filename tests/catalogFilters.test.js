@@ -8,13 +8,13 @@ import {
   stockStatus,
   toCsv,
   uniqueValues,
-} from "@/PanelComponents/catalogFilters";
-import { inventoryHealth } from "@/PanelComponents/Inventorycomponets/InventoryHealth";
+} from "@/components/dashboard/shared/catalogFilters";
+import { inventoryHealth } from "@/components/dashboard/inventory/InventoryHealth";
 import { getInventoryRows } from "@/lib/catalog";
-import { linkStore } from "@/lib/Shopify/stores";
-import { upsertShopifyProducts } from "@/lib/Shopify/syncProduct";
+import { linkStore } from "@/lib/shopify/stores";
+import { upsertShopifyProducts } from "@/lib/shopify/syncProduct";
 import Inventory from "@/models/Inventory";
-import Shopifystore from "@/models/ShopifyUser";
+import Shopifystore from "@/models/ShopifyStore";
 import { createUser, resetDatabase } from "./helpers/db";
 import { shopifyProduct } from "./helpers/fakeShopify";
 

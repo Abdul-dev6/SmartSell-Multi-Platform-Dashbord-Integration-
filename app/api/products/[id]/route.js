@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import Product from "@/models/Products";
+import Product from "@/models/Product";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { validateProductInput } from "@/lib/products/validation";

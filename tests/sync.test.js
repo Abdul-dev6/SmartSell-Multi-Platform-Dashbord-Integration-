@@ -1,20 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import mongoose from "mongoose";
-import Shopifystore from "@/models/ShopifyUser";
-import Product from "@/models/Products";
+import Shopifystore from "@/models/ShopifyStore";
+import Product from "@/models/Product";
 import Inventory from "@/models/Inventory";
 import Order from "@/models/Order";
-import { linkStore } from "@/lib/Shopify/stores";
-import { upsertShopifyProducts } from "@/lib/Shopify/syncProduct";
+import { linkStore } from "@/lib/shopify/stores";
+import { upsertShopifyProducts } from "@/lib/shopify/syncProduct";
 import { createUser, resetDatabase } from "./helpers/db";
 import { fakeShopify, shopifyOrder, shopifyProduct } from "./helpers/fakeShopify";
 
 const shopify = vi.hoisted(() => ({ current: null }));
-vi.mock("@/lib/Shopify/client", () => ({
+vi.mock("@/lib/shopify/client", () => ({
   createClient: () => shopify.current,
 }));
 
-const { syncStore } = await import("@/lib/Shopify/syncStore");
+const { syncStore } = await import("@/lib/shopify/syncStore");
 
 const SHOP = "test-store.myshopify.com";
 

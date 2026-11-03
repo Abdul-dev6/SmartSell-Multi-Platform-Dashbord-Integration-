@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
-import { disconnectStore } from "@/lib/Shopify/stores";
+import { disconnectStore } from "@/lib/shopify/stores";
 
 // Disconnects one of the signed-in user's Shopify stores.
 export async function DELETE(req, { params }) {

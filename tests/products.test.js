@@ -1,17 +1,17 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import Product from "@/models/Products";
+import Product from "@/models/Product";
 import Order from "@/models/Order";
-import Shopifystore from "@/models/ShopifyUser";
-import { linkStore } from "@/lib/Shopify/stores";
-import { upsertShopifyProducts, syncProducts } from "@/lib/Shopify/syncProduct";
+import Shopifystore from "@/models/ShopifyStore";
+import { linkStore } from "@/lib/shopify/stores";
+import { upsertShopifyProducts, syncProducts } from "@/lib/shopify/syncProduct";
 import { validateProductInput } from "@/lib/products/validation";
 import { createUser, resetDatabase, sessionCookieFor } from "./helpers/db";
 import { fakeShopifyStore, shopifyOrder, shopifyProduct } from "./helpers/fakeShopify";
-import { upsertShopifyOrders } from "@/lib/Shopify/ordersync";
+import { upsertShopifyOrders } from "@/lib/shopify/ordersync";
 
 const shopify = vi.hoisted(() => ({ current: null }));
-vi.mock("@/lib/Shopify/client", () => ({ createClient: () => shopify.current }));
+vi.mock("@/lib/shopify/client", () => ({ createClient: () => shopify.current }));
 
 const service = await import("@/lib/products/service");
 const { createProduct, updateProduct, deleteProduct, retryProduct, reconcilePendingCreates } = service;

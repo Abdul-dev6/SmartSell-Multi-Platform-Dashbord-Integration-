@@ -1,18 +1,18 @@
 import crypto from "node:crypto";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import Product from "@/models/Products";
+import Product from "@/models/Product";
 import WebhookEvent from "@/models/WebhookEvent";
-import Shopifystore from "@/models/ShopifyUser";
-import { linkStore } from "@/lib/Shopify/stores";
+import Shopifystore from "@/models/ShopifyStore";
+import { linkStore } from "@/lib/shopify/stores";
 import { verifyWebhookHmac } from "@/lib/webhooks/verify";
 import { processDueEvents } from "@/lib/webhooks/queue";
-import { ensureWebhookSubscriptions, getWebhookCallbackUrl } from "@/lib/Shopify/webhookRegistration";
+import { ensureWebhookSubscriptions, getWebhookCallbackUrl } from "@/lib/shopify/webhookRegistration";
 import { createUser, resetDatabase } from "./helpers/db";
 import { fakeShopifyStore, shopifyProduct } from "./helpers/fakeShopify";
 
 const shopify = vi.hoisted(() => ({ current: null }));
-vi.mock("@/lib/Shopify/client", () => ({ createClient: () => shopify.current }));
+vi.mock("@/lib/shopify/client", () => ({ createClient: () => shopify.current }));
 
 const { POST: webhook } = await import("@/app/api/shopify/webhooks/route");
 const { GET: worker } = await import("@/app/api/shopify/webhooks/process/route");

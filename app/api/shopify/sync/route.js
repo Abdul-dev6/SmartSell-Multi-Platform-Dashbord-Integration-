@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { getActiveStores } from "@/lib/catalog";
-import { syncStore } from "@/lib/Shopify/syncStore";
+import { syncStore } from "@/lib/shopify/syncStore";
 import { processDueEvents } from "@/lib/webhooks/queue";
 
 // Large catalogs take time; 60s is within every Vercel plan's limit.

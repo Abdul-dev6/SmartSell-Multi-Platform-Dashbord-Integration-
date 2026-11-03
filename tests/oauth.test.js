@@ -6,7 +6,7 @@ import {
   normalizeShopDomain,
   readOAuthState,
   verifyOAuthQueryHmac,
-} from "@/lib/Shopify/oauth";
+} from "@/lib/shopify/oauth";
 
 describe("shop domain validation", () => {
   it("accepts canonical myshopify domains", () => {

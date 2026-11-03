@@ -1,17 +1,17 @@
 import zlib from "node:zlib";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import Product from "@/models/Products";
-import Shopifystore from "@/models/ShopifyUser";
-import { linkStore } from "@/lib/Shopify/stores";
+import Product from "@/models/Product";
+import Shopifystore from "@/models/ShopifyStore";
+import { linkStore } from "@/lib/shopify/stores";
 import { detectImageType, safeFilename } from "@/lib/products/images";
 import { classifyFailure } from "@/lib/products/service";
-import { ShopifyGraphQLError } from "@/lib/Shopify/graphql";
+import { ShopifyGraphQLError } from "@/lib/shopify/graphql";
 import { createUser, resetDatabase, sessionCookieFor } from "./helpers/db";
 import { fakeShopifyStore } from "./helpers/fakeShopify";
 
 const shopify = vi.hoisted(() => ({ current: null }));
-vi.mock("@/lib/Shopify/client", () => ({ createClient: () => shopify.current }));
+vi.mock("@/lib/shopify/client", () => ({ createClient: () => shopify.current }));
 
 const { createProduct } = await import("@/lib/products/service");
 const { validateProductInput } = await import("@/lib/products/validation");

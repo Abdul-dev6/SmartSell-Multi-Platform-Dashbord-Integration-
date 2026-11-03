@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it } from "vitest";
 import Order from "@/models/Order";
-import Product from "@/models/Products";
+import Product from "@/models/Product";
 import Inventory from "@/models/Inventory";
-import Shopifystore from "@/models/ShopifyUser";
-import { linkStore } from "@/lib/Shopify/stores";
-import { upsertShopifyOrders } from "@/lib/Shopify/ordersync";
-import { upsertShopifyProducts } from "@/lib/Shopify/syncProduct";
+import Shopifystore from "@/models/ShopifyStore";
+import { linkStore } from "@/lib/shopify/stores";
+import { upsertShopifyOrders } from "@/lib/shopify/ordersync";
+import { upsertShopifyProducts } from "@/lib/shopify/syncProduct";
 import { getActiveStores } from "@/lib/catalog";
 import { getDashboardSummary } from "@/lib/analytics/dashboard";
 import { GET as inventoryRoute } from "@/app/api/inventory/route";

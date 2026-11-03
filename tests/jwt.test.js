@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { describe, expect, it } from "vitest";
 import { generateToken, SESSION_MAX_AGE, verifyToken } from "@/lib/jwt";
-import { createOAuthState } from "@/lib/Shopify/oauth";
+import { createOAuthState } from "@/lib/shopify/oauth";
 
 const user = { _id: "507f1f77bcf86cd799439011" };
 

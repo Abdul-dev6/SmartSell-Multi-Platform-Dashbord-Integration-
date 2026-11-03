@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import Shopifystore from "@/models/ShopifyUser";
-import { isValidShopDomain } from "@/lib/Shopify/oauth";
+import Shopifystore from "@/models/ShopifyStore";
+import { isValidShopDomain } from "@/lib/shopify/oauth";
 import { verifyWebhookHmac } from "@/lib/webhooks/verify";
 import { SUPPORTED_TOPICS } from "@/lib/webhooks/handlers";
 import { processDueEvents, processWebhookEvent, recordWebhookEvent } from "@/lib/webhooks/queue";

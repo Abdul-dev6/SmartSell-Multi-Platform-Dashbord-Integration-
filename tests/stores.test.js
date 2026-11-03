@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import Shopifystore from "@/models/ShopifyUser";
+import Shopifystore from "@/models/ShopifyStore";
 import {
   disconnectStore,
   getActiveStoreForUser,
   linkStore,
   StoreOwnershipError,
-} from "@/lib/Shopify/stores";
+} from "@/lib/shopify/stores";
 import { createUser, resetDatabase } from "./helpers/db";
 
 const SHOP = "test-store.myshopify.com";

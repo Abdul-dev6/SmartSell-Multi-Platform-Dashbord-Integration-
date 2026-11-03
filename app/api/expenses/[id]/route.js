@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
-import Expense from "@/models/Expensive";
+import Expense from "@/models/Expense";
 import { requireUser } from "@/lib/auth/GetCurrentUser";
 import { readJsonBody } from "@/lib/auth/credentials";
 import { toClientExpense, validateExpense } from "@/lib/expenses";

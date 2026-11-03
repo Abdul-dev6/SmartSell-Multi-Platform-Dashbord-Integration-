@@ -1,15 +1,15 @@
 import crypto from "node:crypto";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import Shopifystore from "@/models/ShopifyUser";
+import Shopifystore from "@/models/ShopifyStore";
 import { GET as install } from "@/app/api/shopify/install/route";
 import { GET as callback } from "@/app/api/shopify/callback/route";
 import { GET as status } from "@/app/api/shopify/status/route";
 import { DELETE as disconnect } from "@/app/api/shopify/stores/[id]/route";
 import { GET as monthly } from "@/app/api/shopify/Montlycalculation/route";
 import { GET as userdata } from "@/app/api/shopify/Shopifyuserdata/route";
-import { createOAuthState, OAUTH_STATE_COOKIE } from "@/lib/Shopify/oauth";
-import { linkStore } from "@/lib/Shopify/stores";
+import { createOAuthState, OAUTH_STATE_COOKIE } from "@/lib/shopify/oauth";
+import { linkStore } from "@/lib/shopify/stores";
 import { createUser, resetDatabase, sessionCookieFor } from "./helpers/db";
 
 const SHOP = "test-store.myshopify.com";
@@ -290,7 +290,7 @@ describe("live-update status per deployment", () => {
       body = await (await status(request(`${BASE}/api/shopify/status`, [sessionCookieFor(user)]))).json();
       expect(body.stores[0].webhooks).toMatchObject({ status: "outdated", missingTopics: ["orders/create", "orders/updated", "inventory_levels/update"] });
 
-      await Shopifystore.updateOne({ _id: store._id }, { $set: { "webhooks.topics": Object.values((await import("@/lib/Shopify/webhookRegistration")).WEBHOOK_TOPICS) } });
+      await Shopifystore.updateOne({ _id: store._id }, { $set: { "webhooks.topics": Object.values((await import("@/lib/shopify/webhookRegistration")).WEBHOOK_TOPICS) } });
       body = await (await status(request(`${BASE}/api/shopify/status`, [sessionCookieFor(user)]))).json();
       expect(body.stores[0].webhooks.status).toBe("active");
     } finally {
