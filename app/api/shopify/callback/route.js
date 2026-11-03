@@ -13,6 +13,7 @@ import {
 } from "@/lib/shopify/oauth";
 import { linkStore, StoreOwnershipError } from "@/lib/shopify/stores";
 import { registerStoreWebhooks } from "@/lib/shopify/webhookRegistration";
+import { logError } from "@/lib/observability/log";
 
 function redirectToIntegration(req, params) {
   const url = new URL("/Panel/Ecommerce/Integration", req.url);
@@ -37,7 +38,7 @@ export async function GET(req) {
 
   const config = getShopifyOAuthConfig();
   if (!config) {
-    console.error("Shopify callback: OAuth environment variables are missing");
+    logError(req, "shopify_oauth_not_configured", null);
     return redirectToIntegration(req, { error: "shopify_not_configured" });
   }
 
@@ -81,10 +82,10 @@ export async function GET(req) {
     }
 
     // Never log the code, token or response body.
-    console.error("Shopify callback failed:", {
+    logError(req, "shopify_callback_failed", error, {
+      message: false,
       shop,
-      error: error.code || error.name,
-      status: error.status,
+      ...(error.status ? { status: error.status } : {}),
     });
     return redirectToIntegration(req, { error: "connection_failed" });
   }

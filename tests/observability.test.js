@@ -118,6 +118,43 @@ describe("no personal data in logs", () => {
   });
 });
 
+describe("structured background logs", () => {
+  it("logInfo / logWarn write one JSON line at the right level", async () => {
+    const { logInfo, logWarn } = await import("@/lib/observability/log");
+    const info = vi.spyOn(console, "log").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    logInfo(null, "something_done", { count: 3 });
+    logWarn(null, "something_odd", null, { shop: "x.myshopify.com" });
+    expect(JSON.parse(info.mock.calls[0][0])).toEqual({ level: "info", event: "something_done", requestId: null, count: 3 });
+    expect(JSON.parse(warn.mock.calls[0][0])).toEqual({ level: "warn", event: "something_odd", requestId: null, shop: "x.myshopify.com" });
+  });
+
+  it("a store sync logs its outcome with counts and duration, and no token", async () => {
+    const info = vi.spyOn(console, "log").mockImplementation(() => {});
+    const { fakeShopify } = await import("./helpers/fakeShopify");
+    const { syncStore } = await import("@/lib/shopify/syncStore");
+    const user = await createUser();
+    const store = await linkStore({ userId: user._id, shop: "log-store.myshopify.com", accessToken: "shpat_secret_token", scope: "" });
+    shopify.current = fakeShopify({ products: [], orders: [] });
+    await syncStore(store._id, user._id);
+    const lines = info.mock.calls.map(([l]) => JSON.parse(l));
+    expect(lines).toContainEqual(expect.objectContaining({ level: "info", event: "sync_finished", shop: "log-store.myshopify.com", status: "success", counts: expect.objectContaining({ products: 0 }), durationMs: expect.any(Number) }));
+    expect(JSON.stringify([...info.mock.calls, ...errorLog.mock.calls])).not.toContain("shpat_secret_token");
+  });
+
+  it("a webhook event that fails is logged with its IDs and without the error message", async () => {
+    const user = await createUser();
+    const store = await linkStore({ userId: user._id, shop: "fail-store.myshopify.com", accessToken: "t", scope: "" });
+    const Product = (await import("@/models/Product")).default;
+    vi.spyOn(Product, "bulkWrite").mockRejectedValue(new Error("write failed for Ada Lovelace"));
+    await webhook(delivery(store.shop, "products/update", { id: 5, title: "x", updated_at: "2026-10-01T00:00:00Z" }));
+    const entry = loggedEntries().find((e) => e.event === "webhook_event_retry_scheduled");
+    expect(entry).toMatchObject({ level: "error", topic: "products/update", shop: "fail-store.myshopify.com", attempt: 1, error: "Error" });
+    expect(entry.webhookId).toBeTruthy();
+    expect(JSON.stringify(errorLog.mock.calls)).not.toContain("Ada Lovelace");
+  });
+});
+
 describe("sync health", () => {
   it("reports this user's failed and stuck webhook events and the last daily run", async () => {
     const user = await createUser();

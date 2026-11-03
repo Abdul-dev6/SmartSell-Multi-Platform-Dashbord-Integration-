@@ -6,7 +6,7 @@ import { reconcileStaleStores } from "@/lib/shopify/syncStore";
 import CronRun, { CRON_RUN_RETENTION_DAYS } from "@/models/CronRun";
 
 const runExpiry = () => new Date(Date.now() + CRON_RUN_RETENTION_DAYS * 86400000);
-import { logError } from "@/lib/observability/log";
+import { logError, logInfo } from "@/lib/observability/log";
 
 export const maxDuration = 60;
 
@@ -37,6 +37,7 @@ export async function GET(req) {
       reconciliation,
       expiresAt: runExpiry(),
     });
+    logInfo(req, "recovery_worker_finished", { ...summary, reconciliation, durationMs: Date.now() - startedAt.getTime() });
     return NextResponse.json({ success: true, ...summary, reconciliation });
   } catch (error) {
     await CronRun.create({ startedAt, finishedAt: new Date(), status: "failed", error: error.name, expiresAt: runExpiry() }).catch(() => {});

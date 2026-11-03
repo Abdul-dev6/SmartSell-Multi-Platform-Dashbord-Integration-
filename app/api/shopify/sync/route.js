@@ -36,7 +36,7 @@ export async function POST(req) {
       storeIds: targets.map((store) => store._id),
       limit: 100,
       deadline: Date.now() + 10000,
-    }).catch((error) => console.error("Webhook catch-up failed:", error.name));
+    }).catch((error) => logError(req, "webhook_catchup_failed", error, { message: false }));
 
     const results = [];
     for (const store of targets) {

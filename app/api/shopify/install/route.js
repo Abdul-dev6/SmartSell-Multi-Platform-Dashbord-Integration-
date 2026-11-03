@@ -35,7 +35,7 @@ export async function GET(req) {
 
     const config = getShopifyOAuthConfig();
     if (!config) {
-      console.error("Shopify install: OAuth environment variables are missing");
+      logError(req, "shopify_oauth_not_configured", null);
       return redirectToIntegration(req, { error: "shopify_not_configured" });
     }
 

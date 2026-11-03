@@ -138,6 +138,6 @@ describe("Shopify HTTP client safeguards", () => {
     await client.get("/shop.json");
     await client.get("/shop.json");
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0][0]).toMatch(/served API version 2099-01 instead of 2026-07/);
+    expect(JSON.parse(warn.mock.calls[0][0])).toMatchObject({ level: "warn", event: "shopify_api_version_mismatch", requested: "2026-07", served: "2099-01" });
   });
 });

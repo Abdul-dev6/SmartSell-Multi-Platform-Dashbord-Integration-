@@ -5,6 +5,7 @@ import { isValidShopDomain } from "@/lib/shopify/oauth";
 import { verifyWebhookHmac } from "@/lib/webhooks/verify";
 import { SUPPORTED_TOPICS } from "@/lib/webhooks/handlers";
 import { processDueEvents, processWebhookEvent, recordWebhookEvent } from "@/lib/webhooks/queue";
+import { logError } from "@/lib/observability/log";
 
 export const maxDuration = 10;
 
@@ -31,7 +32,7 @@ export async function POST(req) {
   const startedAt = Date.now();
   const secret = process.env.SHOPIFY_CLIENT_SECRET;
   if (!secret) {
-    console.error("Webhook received but SHOPIFY_CLIENT_SECRET is not configured");
+    logError(req, "webhook_secret_not_configured", null);
     return NextResponse.json({ error: "not_configured" }, { status: 500 });
   }
 
@@ -97,7 +98,7 @@ export async function POST(req) {
     event = recorded.event;
   } catch (error) {
     // Not stored: return an error so Shopify delivers it again.
-    console.error("Webhook could not be stored:", { topic, shop, error: error.name });
+    logError(req, "webhook_store_failed", error, { message: false, topic, shop, webhookId });
     return NextResponse.json({ error: "temporarily_unavailable" }, { status: 503 });
   }
 
@@ -111,7 +112,7 @@ export async function POST(req) {
     }
     return ok({ status: result.status });
   } catch (error) {
-    console.error("Webhook processing error (will retry):", { topic, shop, error: error.name });
+    logError(req, "webhook_processing_error", error, { message: false, topic, shop, webhookId });
     return ok({ status: "queued" });
   }
 }

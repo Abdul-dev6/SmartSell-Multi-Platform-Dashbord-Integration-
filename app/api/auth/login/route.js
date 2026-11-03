@@ -66,7 +66,7 @@ export async function POST(req) {
       await UserSchema.updateOne(
         { _id: user._id, password: user.password },
         { $set: { password: await hashPassword(password) } },
-      ).catch((error) => console.error("Password rehash failed:", error.name));
+      ).catch((error) => logError(req, "password_rehash_failed", error, { message: false }));
     }
 
     const res = NextResponse.json(
