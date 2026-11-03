@@ -1,3 +1,65 @@
+// REST-shaped fixture -> GraphQL Product node, as the Admin API returns it.
+export function toGraphqlProduct(p) {
+  return {
+    legacyResourceId: String(p.id),
+    title: p.title,
+    handle: p.handle,
+    descriptionHtml: p.body_html,
+    vendor: p.vendor,
+    productType: p.product_type,
+    status: p.status ? String(p.status).toUpperCase() : null,
+    tags: p.tags ? String(p.tags).split(",").map((t) => t.trim()).filter(Boolean) : [],
+    updatedAt: p.updated_at,
+    variants: {
+      pageInfo: { hasNextPage: false, endCursor: null },
+      nodes: (p.variants || []).map((v) => ({
+        legacyResourceId: String(v.id),
+        title: v.title,
+        sku: v.sku ?? null,
+        barcode: v.barcode ?? null,
+        price: v.price ?? null,
+        compareAtPrice: v.compare_at_price ?? null,
+        inventoryPolicy: "DENY",
+        position: v.position ?? 1,
+        inventoryItem: v.inventory_item_id ? { legacyResourceId: String(v.inventory_item_id), tracked: true } : null,
+      })),
+    },
+    media: {
+      nodes: (p.images || []).map((i) => ({
+        id: `gid://shopify/MediaImage/${i.id}`,
+        alt: i.alt || "",
+        image: { url: i.src, altText: i.alt || "" },
+      })),
+    },
+  };
+}
+
+// Answers the GraphQL product reads; returns null for other queries.
+export function answerProductQuery(products, body, pageSize = 50) {
+  const q = body.query;
+  if (q.includes("SmartSellProducts(")) {
+    const start = Number(body.variables?.after || 0);
+    const slice = products.slice(start, start + pageSize);
+    const hasNextPage = start + pageSize < products.length;
+    return {
+      data: {
+        data: {
+          products: {
+            pageInfo: { hasNextPage, endCursor: hasNextPage ? String(start + pageSize) : null },
+            nodes: slice.map(toGraphqlProduct),
+          },
+        },
+      },
+    };
+  }
+  if (q.includes("SmartSellProduct(")) {
+    const id = String(body.variables.id).split("/").pop();
+    const p = products.find((x) => String(x.id) === id);
+    return { data: { data: { product: p ? toGraphqlProduct(p) : null } } };
+  }
+  return null;
+}
+
 // Minimal stand-in for the axios Shopify client used by the sync services.
 // Serves fixtures by URL and records every call.
 export function fakeShopify({
@@ -52,6 +114,13 @@ export function fakeShopify({
         return page(orders, url, "orders");
       }
       throw error(404);
+    },
+    async post(url, body) {
+      calls.push({ url, query: body.query.match(/query (\w+)/)?.[1], variables: body.variables });
+      if (fail.products && body.query.includes("SmartSellProduct")) throw error(fail.products);
+      const answer = answerProductQuery(products, body, pageSize);
+      if (answer) return answer;
+      throw new Error(`fakeShopify: unhandled GraphQL ${body.query.slice(0, 60)}`);
     },
   };
 }
@@ -201,6 +270,11 @@ export function fakeShopifyStore({ products = [] } = {}) {
       return base.get(url, options);
     },
     async post(url, body) {
+      const read = answerProductQuery(state.products, body);
+      if (read) {
+        state.mutations.push("read");
+        return read;
+      }
       const name = body.query.match(/(productSet|productUpdate|productVariantsBulkUpdate|productDelete|products)\(/)?.[1];
       state.mutations.push(name);
       const mode = failure(name);

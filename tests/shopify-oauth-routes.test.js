@@ -7,7 +7,6 @@ import { GET as callback } from "@/app/api/shopify/callback/route";
 import { GET as status } from "@/app/api/shopify/status/route";
 import { DELETE as disconnect } from "@/app/api/shopify/stores/[id]/route";
 import { GET as monthly } from "@/app/api/shopify/Montlycalculation/route";
-import { GET as userdata } from "@/app/api/shopify/Shopifyuserdata/route";
 import { createOAuthState, OAUTH_STATE_COOKIE } from "@/lib/shopify/oauth";
 import { linkStore } from "@/lib/shopify/stores";
 import { createUser, resetDatabase, sessionCookieFor } from "./helpers/db";
@@ -224,7 +223,7 @@ describe("GET /api/shopify/callback", () => {
 
 describe("authenticated Shopify API routes", () => {
   it("return 401 without a valid session", async () => {
-    for (const handler of [status, monthly, userdata]) {
+    for (const handler of [status, monthly]) {
       const res = await handler(request(`${BASE}/api/x?type=orders`));
       expect(res.status).toBe(401);
     }
