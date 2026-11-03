@@ -63,6 +63,9 @@ const OrderSchema = new mongoose.Schema(
     financialStatus: String,
     fulfillmentStatus: String,
     cancelledAt: Date,
+    // Set when the order was deleted in Shopify (webhook or reconciliation).
+    // The record is kept but excluded from every view and figure.
+    deletedAt: Date,
 
     shopifyCreatedAt: Date,
     shopifyUpdatedAt: Date,

@@ -49,6 +49,14 @@ const InventorySchema = new mongoose.Schema(
       type: Date,
     },
 
+    // Set when Shopify no longer stocks the item at this location
+    // (inventory_levels/disconnect, or absent from a full sync). Hidden, not
+    // deleted, so a delayed older update cannot bring the level back.
+    disconnectedAt: {
+      type: Date,
+      default: null,
+    },
+
     lastSyncedAt: Date,
   },
   {

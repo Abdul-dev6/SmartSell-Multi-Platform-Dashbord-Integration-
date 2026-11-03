@@ -45,7 +45,7 @@ describe("syncStore", () => {
 
     const result = await syncStore(store._id, user._id);
     expect(result.status).toBe("success");
-    expect(result.counts).toEqual({ products: 3, archivedProducts: 0, reconciledCreates: 0, inventoryLevels: 2, orders: 2 });
+    expect(result.counts).toEqual({ products: 3, archivedProducts: 0, reconciledCreates: 0, inventoryLevels: 2, orders: 2, deletedOrders: 0 });
 
     const names = (await mongoose.connection.db.listCollections().toArray()).map((c) => c.name);
     expect(names).toEqual(expect.arrayContaining(["products", "inventories", "orders"]));

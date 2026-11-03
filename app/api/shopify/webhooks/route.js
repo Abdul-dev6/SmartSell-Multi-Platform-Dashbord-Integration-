@@ -65,7 +65,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
   const missingId =
-    topic === "inventory_levels/update"
+    topic.startsWith("inventory_levels/")
       ? !payload?.inventory_item_id || !payload?.location_id
       : /^(products|orders)\//.test(topic) && !payload?.id;
   if (!payload || typeof payload !== "object" || missingId) {

@@ -39,7 +39,6 @@ const EMPTY_FORM = {
   // Inventory
   sku: "",
   barcode: "",
-  warehouse: "Main Warehouse",
   trackInventory: true,
   continueSelling: false,
 
@@ -49,7 +48,6 @@ const EMPTY_FORM = {
   length: "",
   width: "",
   height: "",
-  country: "Pakistan",
   hsCode: "",
 
   // SEO

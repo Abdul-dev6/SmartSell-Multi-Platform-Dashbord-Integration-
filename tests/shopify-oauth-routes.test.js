@@ -287,7 +287,7 @@ describe("live-update status per deployment", () => {
       // Points here but registered with only the original product topics.
       await Shopifystore.updateOne({ _id: store._id }, { $set: { "webhooks.callbackUrl": "https://prod.example.com/api/shopify/webhooks", "webhooks.topics": ["products/create", "products/update", "products/delete", "app/uninstalled"] } });
       body = await (await status(request(`${BASE}/api/shopify/status`, [sessionCookieFor(user)]))).json();
-      expect(body.stores[0].webhooks).toMatchObject({ status: "outdated", missingTopics: ["orders/create", "orders/updated", "inventory_levels/update"] });
+      expect(body.stores[0].webhooks).toMatchObject({ status: "outdated", missingTopics: ["orders/create", "orders/updated", "orders/delete", "inventory_levels/update", "inventory_levels/connect", "inventory_levels/disconnect"] });
 
       await Shopifystore.updateOne({ _id: store._id }, { $set: { "webhooks.topics": Object.values((await import("@/lib/shopify/webhookRegistration")).WEBHOOK_TOPICS) } });
       body = await (await status(request(`${BASE}/api/shopify/status`, [sessionCookieFor(user)]))).json();

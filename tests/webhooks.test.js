@@ -383,11 +383,11 @@ describe("webhook registration", () => {
 
   it("creates one subscription per topic and is idempotent", async () => {
     const client = fakeSubscriptionsClient();
-    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 7, updated: 0, deleted: 0, unchanged: 0, failed: [] });
-    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 0, updated: 0, deleted: 0, unchanged: 7, failed: [] });
+    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 10, updated: 0, deleted: 0, unchanged: 0, failed: [] });
+    expect(await ensureWebhookSubscriptions(client, URL_A)).toEqual({ created: 0, updated: 0, deleted: 0, unchanged: 10, failed: [] });
     expect(client.subs.map((s) => s.topic).sort()).toEqual([
-      "APP_UNINSTALLED", "INVENTORY_LEVELS_UPDATE", "ORDERS_CREATE", "ORDERS_UPDATED",
-      "PRODUCTS_CREATE", "PRODUCTS_DELETE", "PRODUCTS_UPDATE",
+      "APP_UNINSTALLED", "INVENTORY_LEVELS_CONNECT", "INVENTORY_LEVELS_DISCONNECT", "INVENTORY_LEVELS_UPDATE",
+      "ORDERS_CREATE", "ORDERS_DELETE", "ORDERS_UPDATED", "PRODUCTS_CREATE", "PRODUCTS_DELETE", "PRODUCTS_UPDATE",
     ]);
   });
 
@@ -397,7 +397,7 @@ describe("webhook registration", () => {
       { id: "2", topic: "PRODUCTS_UPDATE", uri: "https://older.example.com/api/shopify/webhooks" },
     ]);
     const summary = await ensureWebhookSubscriptions(client, URL_A);
-    expect(summary).toMatchObject({ created: 6, updated: 1, deleted: 1, failed: [] });
+    expect(summary).toMatchObject({ created: 9, updated: 1, deleted: 1, failed: [] });
     expect(client.subs.filter((s) => s.topic === "PRODUCTS_UPDATE")).toEqual([{ id: "1", topic: "PRODUCTS_UPDATE", uri: URL_A }]);
   });
 
@@ -411,7 +411,7 @@ describe("webhook registration", () => {
       return original(url, body);
     };
     const summary = await ensureWebhookSubscriptions(client, URL_A);
-    expect(summary.created).toBe(6);
+    expect(summary.created).toBe(9);
     expect(summary.failed).toEqual([{ topic: "orders/create", error: "Not approved for protected customer data" }]);
   });
 

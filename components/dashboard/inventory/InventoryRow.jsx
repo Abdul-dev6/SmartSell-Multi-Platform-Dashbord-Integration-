@@ -62,17 +62,8 @@ export default function InventoryRow({ product }) {
 
   const getMarketplaceColor = (marketplace) => {
     switch (marketplace) {
-      case "Amazon":
-        return "bg-orange-100 text-orange-700";
-
       case "Shopify":
         return "bg-green-100 text-green-700";
-
-      case "eBay":
-        return "bg-blue-100 text-blue-700";
-
-      case "Walmart":
-        return "bg-indigo-100 text-indigo-700";
 
       default:
         return "bg-gray-100 text-gray-700";
