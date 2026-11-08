@@ -89,7 +89,7 @@ const Sidebar = () => {
           </div>
           {!bar && (
             <div className="flex flex-col">
-              <span className="font-bold text-white">Nexus</span>
+              <span className="font-bold text-white">SmartSell</span>
               <span className="text-sm text-slate-400">Admin Panel</span>
             </div>
           )}

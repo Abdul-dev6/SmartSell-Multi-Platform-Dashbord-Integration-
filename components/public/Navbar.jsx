@@ -57,7 +57,7 @@ const Navbarpage = () => {
       <div className="flex justify-between items-center h-16">
         {/* Logo */}
         <Link href="/" className="text-2xl font-semibold text-slate-900">
-          Nexus
+          SmartSell
         </Link>
 
         {/* Desktop nav — animated underline on hover */}

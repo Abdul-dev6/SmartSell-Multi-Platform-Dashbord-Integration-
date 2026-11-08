@@ -95,7 +95,7 @@ const Signup = () => {
           </h1>
 
           <p className="mt-3 text-slate-400">
-            Join Nexus and start growing your business.
+            Join SmartSell and start growing your business.
           </p>
         </motion.div>
 

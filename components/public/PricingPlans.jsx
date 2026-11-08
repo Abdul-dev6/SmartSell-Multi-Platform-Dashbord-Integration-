@@ -105,7 +105,7 @@ export default function Pricing() {
         className="max-w-7xl mx-auto px-6 pt-16"
       >
         <h1 className="text-center text-3xl md:text-4xl font-bold text-gray-800">
-          Nexus Plans & Pricing
+          SmartSell Plans & Pricing
         </h1>
 
         <p className="max-w-3xl mx-auto text-center mt-6 text-lg text-gray-600 leading-8">
@@ -189,7 +189,7 @@ export default function Pricing() {
         </h2>
 
         <p className="text-center text-gray-600 mt-4 max-w-2xl mx-auto">
-          Everything you need to know about Nexus pricing and features.
+          Everything you need to know about SmartSell pricing and features.
         </p>
 
         <div className="mt-14 space-y-5">

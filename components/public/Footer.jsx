@@ -22,7 +22,7 @@ function Footer() {
         {/* Brand */}
         <div className="space-y-3">
           <span className="text-xl font-bold text-white tracking-tight">
-            Nexus<span className="text-blue-500">™</span>
+            SmartSell<span className="text-blue-500">™</span>
           </span>
           <p className="text-sm text-slate-400 max-w-xs">
             One dashboard to manage listings, orders, and inventory across every
@@ -90,7 +90,7 @@ function Footer() {
       <div className="border-t border-slate-800">
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-slate-500 text-center sm:text-left">
-            © 2026 <span className="font-semibold text-slate-400">Nexus™</span>.
+            © 2026 <span className="font-semibold text-slate-400">SmartSell™</span>.
             All rights reserved.
           </p>
         </div>

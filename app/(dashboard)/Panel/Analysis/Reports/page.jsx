@@ -18,7 +18,7 @@ function Reports() {
       {/* ── Hero Banner ── */}
       <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 px-6 py-8 text-white shadow-lg shadow-blue-950/20">
         <p className="text-xs uppercase tracking-[0.25em] text-cyan-200/80">
-          Nexus Panel
+          SmartSell Panel
         </p>
         <h1 className="mt-2 text-2xl sm:text-3xl font-black">
           Analytics & Reports

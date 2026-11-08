@@ -57,7 +57,7 @@ function AboutUs() {
             className="w-full lg:w-[55%]"
           >
             <h2 className="text-4xl font-bold mb-8 text-gray-900">
-              About Nexus
+              About SmartSell
             </h2>
 
             <p className="text-gray-600 leading-8">
@@ -85,7 +85,7 @@ function AboutUs() {
           >
             <Image
               src="/online.jpg"
-              alt="About Nexus"
+              alt="About SmartSell"
               width={500}
               height={400}
               className="rounded-3xl shadow-xl w-full max-w-md object-cover"
@@ -133,12 +133,12 @@ function AboutUs() {
                 <br />
                 <br />
                 Managing multiple platforms requires more than spreadsheets and
-                separate dashboards. Nexus provides one centralized workspace
+                separate dashboards. SmartSell provides one centralized workspace
                 for inventory, listings, orders, shipping, and analytics.
                 <br />
                 <br />
                 Whether you&apos;re expanding internationally or managing multiple
-                brands, Nexus helps you scale confidently with real-time
+                brands, SmartSell helps you scale confidently with real-time
                 insights and automation.
               </p>
             </motion.div>
