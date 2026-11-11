@@ -8,7 +8,7 @@ import ProductHeader from "@/components/dashboard/products/ProductHeader";
 import ProductCards from "@/components/dashboard/products/ProductCards";
 import ProductFilters from "@/components/dashboard/products/ProductFilters";
 import ProductTable from "@/components/dashboard/products/ProductTable";
-import SyncStatus from "@/components/dashboard/shared/SyncStatus";
+import MarketplaceSync from "@/components/dashboard/shared/MarketplaceSync";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
 import NeedsAttention from "@/components/dashboard/products/NeedsAttention";
@@ -48,19 +48,15 @@ function ProductsContent({ initialQuery }) {
     >
       <ProductHeader ProductData={ProductData} />
 
-      {body && (
-        <div className="mt-6">
-          <SyncStatus hasStore={body.hasStore} sync={body.sync} onSynced={reload} autoSyncIfNever />
-        </div>
-      )}
+      <MarketplaceSync body={body} onSynced={reload} autoSyncIfNever />
 
       <NeedsAttention items={body?.needsAttention} onChanged={reload} />
 
       <LoadState
         loading={loading && !body}
         error={error}
-        empty={body?.hasStore && !ProductData.length}
-        emptyText="No products synced yet. Use “Sync now” to import them from Shopify."
+        empty={body?.hasMarketplace && !ProductData.length}
+        emptyText="No products synced yet. Use “Sync now” or “Import from eBay” to bring them in."
         onRetry={reload}
       />
 

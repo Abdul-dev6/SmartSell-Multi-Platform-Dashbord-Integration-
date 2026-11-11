@@ -4,6 +4,7 @@ import Link from "next/link";
 import ProductThumb from "@/components/dashboard/shared/ProductThumb";
 import { formatMoney } from "@/components/dashboard/shared/format";
 import { deleteProductWithConfirm, shopifyAdminUrl } from "@/components/dashboard/products/deleteProduct";
+import { deleteEbayProductWithConfirm } from "@/components/dashboard/products/deleteEbayProduct";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, Pencil, Trash2 } from "lucide-react";
@@ -33,7 +34,8 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
   const handleDelete = async (item) => {
     setDeletingId(item.local_id);
     setError(null);
-    const result = await deleteProductWithConfirm({ id: item.local_id, title: item.title });
+    const remove = item.marketplace === "ebay" ? deleteEbayProductWithConfirm : deleteProductWithConfirm;
+    const result = await remove({ id: item.local_id, title: item.title });
     setDeletingId(null);
     if (result.error) setError(`${item.title}: ${result.error}`);
     if (result.deleted) await onChanged?.();
@@ -113,7 +115,11 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
               <td>{item.sku}</td>
 
               <td>
-                <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm text-indigo-600">
+                <span
+                  className={`rounded-full px-3 py-1 text-sm ${
+                    item.marketplace === "ebay" ? "bg-amber-100 text-amber-700" : "bg-indigo-100 text-indigo-600"
+                  }`}
+                >
                   {item.platform}
                 </span>
               </td>
@@ -147,7 +153,20 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
 
               <td>
                 <div className="flex justify-center gap-3">
-                  {item.shop && item.product_id && (
+                  {item.marketplace === "ebay" && item.listing_url && (
+                    <a
+                      href={item.listing_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-lg bg-blue-100 p-2 hover:bg-blue-200"
+                      aria-label={`View ${item.title} on eBay`}
+                      title="View on eBay"
+                    >
+                      <ExternalLink size={18} aria-hidden="true" />
+                    </a>
+                  )}
+
+                  {item.marketplace !== "ebay" && item.shop && item.product_id && (
                     <a
                       href={shopifyAdminUrl.product(item.shop, item.product_id)}
                       target="_blank"
@@ -162,7 +181,11 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
 
                   {item.local_id && (
                     <Link
-                      href={`/Panel/Ecommerce/Product/${item.local_id}/edit`}
+                      href={
+                        item.marketplace === "ebay"
+                          ? `/Panel/Ecommerce/Product/ebay/${item.local_id}/edit`
+                          : `/Panel/Ecommerce/Product/${item.local_id}/edit`
+                      }
                       className="rounded-lg bg-yellow-100 p-2 hover:bg-yellow-200"
                       aria-label={`Edit ${item.title}`}
                       title="Edit"
@@ -177,8 +200,8 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
                       onClick={() => handleDelete(item)}
                       disabled={deletingId === item.local_id}
                       className="rounded-lg bg-red-100 p-2 hover:bg-red-200 disabled:opacity-50"
-                      aria-label={`Delete ${item.title} from Shopify`}
-                      title="Delete from Shopify"
+                      aria-label={`Delete ${item.title} from ${item.platform || "Shopify"}`}
+                      title={`Delete from ${item.platform || "Shopify"}`}
                     >
                       <Trash2 size={18} aria-hidden="true" />
                     </button>

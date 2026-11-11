@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import IntegrationCard from "@/components/dashboard/integrations/IntegrationCard";
 import StoreHealth from "@/components/dashboard/integrations/StoreHealth";
+import EbayPanel from "@/components/dashboard/integrations/EbayPanel";
 import { useSearchParams } from "next/navigation";
 
 const ERROR_MESSAGES = {
@@ -16,10 +17,15 @@ const ERROR_MESSAGES = {
   invalid_state: "The connection request expired or was not started here. Please try again.",
   session_mismatch: "You were signed out during the connection. Sign in and try again.",
   connection_failed: "Could not connect to Shopify. Please try again.",
+  ebay_not_configured: "eBay is not configured on the server. Contact support.",
+  ebay_authorization_declined: "eBay access was not granted. Connect again and choose “Agree” on eBay.",
+  ebay_account_owned_by_another_account: "This eBay account is already linked to another SmartSell account.",
+  ebay_connection_failed: "Could not connect to eBay. Please try again.",
 };
 
 const SUCCESS_MESSAGES = {
   shopify: "Shopify store connected successfully!",
+  ebay: "eBay account connected successfully! Check its listing setup below.",
   already: "This Shopify store is already connected.",
 };
 
@@ -28,6 +34,7 @@ function IntegrationContent() {
   const connected = searchParams.get("connected");
   const errorCode = searchParams.get("error");
   const [showShopifyModal, setShowShopifyModal] = useState(false);
+  const [showEbayModal, setShowEbayModal] = useState(false);
   const [showAuthorizeForm, setShowAuthorizeForm] = useState(false);
   const [stores, setStores] = useState([]);
   const [isLoadingStores, setIsLoadingStores] = useState(false);
@@ -125,6 +132,9 @@ function IntegrationContent() {
     loadShopifyStatus();
   };
 
+  const openEbayModal = () => setShowEbayModal(true);
+  const closeEbayModal = useCallback(() => setShowEbayModal(false), []);
+
   const intergrationdata = [
     {
       Image: "/amazonsvg.png",
@@ -140,9 +150,9 @@ function IntegrationContent() {
     },
     {
       Image: "/ebay.png",
-      title: "Ebay",
-      buttonurl: "",
-      subtitle: "Integrate your eBay store to unlock full control",
+      title: "eBay",
+      isEbay: true,
+      subtitle: "Connect your eBay seller account via OAuth",
     },
     {
       Image: "/etsy.png",
@@ -290,6 +300,13 @@ function IntegrationContent() {
 
       {activeStores.length > 0 && <StoreHealth />}
 
+      <EbayPanel
+        open={showEbayModal}
+        onClose={closeEbayModal}
+        onSuccess={setSuccessMessage}
+        onError={setErrorMessage}
+      />
+
       {/* ── Integration Cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
         {intergrationdata.map((item) => (
@@ -299,7 +316,7 @@ function IntegrationContent() {
             title={item.title}
             subtitle={item.subtitle}
             buttonurl={item.buttonurl || "#"}
-            onConnect={item.isShopify ? openShopifyModal : null}
+            onConnect={item.isShopify ? openShopifyModal : item.isEbay ? openEbayModal : null}
           />
         ))}
       </div>

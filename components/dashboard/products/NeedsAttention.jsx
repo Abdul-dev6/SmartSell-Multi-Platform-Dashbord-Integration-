@@ -16,7 +16,8 @@ export default function NeedsAttention({ items = [], onChanged }) {
     setBusyId(item.id);
     setMessages((m) => ({ ...m, [item.id]: null }));
     try {
-      const response = await fetch(`/api/products/${item.id}/retry`, { method: "POST" });
+      const base = item.marketplace === "ebay" ? "/api/ebay/products" : "/api/products";
+      const response = await fetch(`${base}/${item.id}/retry`, { method: "POST" });
       const data = await response.json().catch(() => ({}));
       // Deleted in Shopify: SmartSell archived it, so the item is resolved.
       if (data.code === "deleted_in_shopify") {
@@ -43,6 +44,7 @@ export default function NeedsAttention({ items = [], onChanged }) {
             <div>
               <p className="font-medium text-slate-800">
                 {item.title}
+                <span className="ml-2 text-xs font-normal text-slate-500">{item.marketplace === "ebay" ? "eBay" : "Shopify"}</span>
                 {item.operation && (
                   <span className="ml-2 text-xs font-normal text-slate-500">
                     {OPERATION_LABELS[item.operation]} {item.syncStatus === "pending" ? "not confirmed" : "failed"}

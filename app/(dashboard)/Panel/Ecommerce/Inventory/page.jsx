@@ -7,7 +7,7 @@ import InventoryCards from "@/components/dashboard/inventory/InventoryCards";
 import InventoryHealth from "@/components/dashboard/inventory/InventoryHealth";
 import InventoryFilters from "@/components/dashboard/inventory/InventoryFilters";
 import InventoryList from "@/components/dashboard/inventory/InventoryList";
-import SyncStatus from "@/components/dashboard/shared/SyncStatus";
+import MarketplaceSync from "@/components/dashboard/shared/MarketplaceSync";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
 import useCatalogFilters from "@/components/dashboard/shared/useCatalogFilters";
@@ -20,19 +20,15 @@ export default function InventoryPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8">
-      <InventoryHeader shop={inventorydata.find((row) => row.shop)?.shop} />
+      <InventoryHeader shop={inventorydata.find((row) => row.marketplace !== "ebay" && row.shop)?.shop} />
 
-      {body && (
-        <div className="mt-6">
-          <SyncStatus hasStore={body.hasStore} sync={body.sync} onSynced={reload} autoSyncIfNever />
-        </div>
-      )}
+      <MarketplaceSync body={body} onSynced={reload} autoSyncIfNever />
 
       <LoadState
         loading={loading && !body}
         error={error}
-        empty={body?.hasStore && !inventorydata.length}
-        emptyText="No inventory synced yet. Use “Sync now” to import it from Shopify."
+        empty={body?.hasMarketplace && !inventorydata.length}
+        emptyText="No inventory synced yet. Use “Sync now” or “Import from eBay” to bring it in."
         onRetry={reload}
       />
 

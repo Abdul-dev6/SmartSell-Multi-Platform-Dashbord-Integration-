@@ -6,7 +6,7 @@ import ListingHeader from "@/components/dashboard/listings/ListingHeader";
 import ListingCards from "@/components/dashboard/listings/ListingCards";
 import ListingFilters from "@/components/dashboard/listings/ListingFilters";
 import ListingTable from "@/components/dashboard/listings/ListingTable";
-import SyncStatus from "@/components/dashboard/shared/SyncStatus";
+import MarketplaceSync from "@/components/dashboard/shared/MarketplaceSync";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
 import useCatalogFilters from "@/components/dashboard/shared/useCatalogFilters";
@@ -21,17 +21,13 @@ export default function ListingPage() {
     <div className="min-h-screen bg-slate-50 p-4 sm:p-6 lg:p-8 overflow-y-auto">
       <ListingHeader ListingData={ListingData} />
 
-      {body && (
-        <div className="mt-6">
-          <SyncStatus hasStore={body.hasStore} sync={body.sync} onSynced={reload} autoSyncIfNever />
-        </div>
-      )}
+      <MarketplaceSync body={body} onSynced={reload} autoSyncIfNever />
 
       <LoadState
         loading={loading && !body}
         error={error}
-        empty={body?.hasStore && !ListingData.length}
-        emptyText="No listings synced yet. Use “Sync now” to import them from Shopify."
+        empty={body?.hasMarketplace && !ListingData.length}
+        emptyText="No listings synced yet. Use “Sync now” or “Import from eBay” to bring them in."
         onRetry={reload}
       />
 
