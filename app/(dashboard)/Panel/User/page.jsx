@@ -4,6 +4,7 @@ import Link from "next/link";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
 import { formatDate } from "@/components/dashboard/shared/format";
+import PasswordInput from "@/components/public/PasswordInput";
 
 function initials(name, email) {
   const source = (name || email || "?").trim();
@@ -100,18 +101,9 @@ function ChangePassword() {
     <form onSubmit={save} className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
       <h2 className="text-xl font-semibold text-slate-900">Change password</h2>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label htmlFor="pw-current" className="block text-sm font-medium text-slate-700 mb-1">Current password</label>
-          <input id="pw-current" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label htmlFor="pw-new" className="block text-sm font-medium text-slate-700 mb-1">New password</label>
-          <input id="pw-new" type="password" autoComplete="new-password" minLength={8} maxLength={72} value={next} onChange={(e) => setNext(e.target.value)} className={inputClass} required />
-        </div>
-        <div>
-          <label htmlFor="pw-confirm" className="block text-sm font-medium text-slate-700 mb-1">Confirm new password</label>
-          <input id="pw-confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} required />
-        </div>
+        <PasswordInput id="pw-current" label="Current password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} className={`${inputClass} pr-12`} labelClassName="block text-sm font-medium text-slate-700 mb-1" />
+        <PasswordInput id="pw-new" label="New password" autoComplete="new-password" showStrength value={next} onChange={(e) => setNext(e.target.value)} className={`${inputClass} pr-12`} labelClassName="block text-sm font-medium text-slate-700 mb-1" />
+        <PasswordInput id="pw-confirm" label="Confirm new password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={`${inputClass} pr-12`} labelClassName="block text-sm font-medium text-slate-700 mb-1" />
       </div>
       <p className="text-xs text-slate-500">Changing your password signs you out on all other devices.</p>
       {message && (

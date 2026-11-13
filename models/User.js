@@ -10,6 +10,10 @@ const userschema = new mongoose.Schema(
     // Raised by "Sign out everywhere"; sessions carrying an older value are
     // no longer accepted.
     sessionVersion: { type: Number, default: 0 },
+    // Password reset: SHA-256 of the emailed token, and when it expires.
+    // Never returned unless selected explicitly.
+    passwordResetHash: { type: String, select: false },
+    passwordResetExpires: { type: Date, select: false },
   },
   { timestamps: true },
 );

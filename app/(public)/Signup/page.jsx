@@ -1,19 +1,18 @@
 "use client";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FaGithub, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import PasswordInput from "@/components/public/PasswordInput";
 const Signup = () => {
   const Router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -158,64 +157,30 @@ const Signup = () => {
           </motion.div>
           {/* Password */}
 
-          <motion.div whileHover={{ scale: 1.02 }}>
-            <label htmlFor="signup-password" className="block text-sm text-slate-600 mb-2">
-              Password <span className="text-slate-400">(at least 8 characters)</span>
-            </label>
-
-            <div className="relative">
-              <input
-                id="signup-password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                required
-                minLength={8}
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5 text-slate-900 placeholder:text-slate-600 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </motion.div>
+          <PasswordInput
+            id="signup-password"
+            label="Password"
+            hint="(8–72 characters)"
+            autoComplete="new-password"
+            showStrength
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
           {/* Confirm Password */}
 
-          <motion.div whileHover={{ scale: 1.02 }}>
-            <label htmlFor="signup-confirm" className="block text-sm text-slate-600 mb-2">
-              Confirm Password
-            </label>
-
-            <div className="relative">
-              <input
-                id="signup-confirm"
-                type={showConfirmPassword ? "text" : "password"}
-                autoComplete="new-password"
-                required
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full  rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3.5  placeholder:text-slate-600 text-slate-900 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-400/50"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
-              >
-                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
-            </div>
-          </motion.div>
+          <div>
+            <PasswordInput
+              id="signup-confirm"
+              label="Confirm Password"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
+            {confirmPassword && password !== confirmPassword && (
+              <p className="mt-1 text-xs text-red-600">Passwords do not match yet.</p>
+            )}
+          </div>
 
           {/* Submit Button */}
 

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { safeNextPath } from "@/lib/auth/nextPath";
+import PasswordInput from "@/components/public/PasswordInput";
 
 // Messages for ?error=… (Google/GitHub sign-in) and ?registered=1.
 const NOTICES = {
@@ -25,11 +26,17 @@ function LoginNotices() {
   const searchParams = useSearchParams();
   const notice = NOTICES[searchParams.get("error")] || null;
   const registered = searchParams.get("registered") === "1";
+  const reset = searchParams.get("reset") === "1";
   return (
     <>
       {registered && (
         <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Account created. Sign in to continue.
+        </p>
+      )}
+      {reset && (
+        <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Password updated. Sign in with your new password.
         </p>
       )}
       {notice && (
@@ -176,22 +183,20 @@ const Signin = () => {
             />
           </motion.div>
 
-          <motion.div whileHover={{ scale: 1.02 }}>
-            <label htmlFor="login-password" className="block text-sm text-slate-600 mb-2">
-              Password
-            </label>
-
-            <input
+          <div>
+            <PasswordInput
               id="login-password"
-              type="password"
+              label="Password"
               autoComplete="current-password"
-              required
-              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30"
             />
-          </motion.div>
+            <div className="mt-2 text-right">
+              <Link href="/ForgotPassword" className="text-sm font-medium text-indigo-500 hover:text-indigo-400">
+                Forgot password?
+              </Link>
+            </div>
+          </div>
           <motion.button
             whileHover={{
               scale: 1.03,
