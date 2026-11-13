@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { MARKETPLACE_OPTIONS } from "@/components/dashboard/shared/catalogFilters";
 
 const fieldClass =
   "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500";
@@ -35,6 +36,19 @@ export function FilterSelect({ label, value, onChange, options, allLabel }) {
         );
       })}
     </select>
+  );
+}
+
+// All Marketplaces / Shopify only / eBay only.
+export function MarketplaceSelect({ value, onChange }) {
+  return (
+    <FilterSelect
+      label="Marketplace"
+      value={value}
+      onChange={onChange}
+      options={MARKETPLACE_OPTIONS}
+      allLabel="All marketplaces"
+    />
   );
 }
 

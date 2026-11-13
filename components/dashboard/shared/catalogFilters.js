@@ -13,6 +13,13 @@ export const STOCK_LABELS = {
 
 export const STATUS_LABELS = { active: "Active", draft: "Draft", archived: "Archived" };
 
+// Rows carry `marketplace`; rows without one are Shopify (older responses).
+export const MARKETPLACE_OPTIONS = [
+  { value: "shopify", label: "Shopify only" },
+  { value: "ebay", label: "eBay only" },
+];
+export const marketplaceOf = (row) => row.marketplace || "shopify";
+
 export const SORT_OPTIONS = [
   { value: "title", label: "Name (A–Z)" },
   { value: "updated_desc", label: "Recently updated" },
@@ -29,6 +36,7 @@ export const DEFAULT_FILTERS = {
   productType: "all",
   location: "all",
   stock: "all",
+  marketplace: "all",
   sort: "title",
 };
 
@@ -97,6 +105,7 @@ export function filterRows(rows, filters = DEFAULT_FILTERS) {
     if (f.productType !== "all" && (row.product_type || "") !== f.productType) return false;
     if (f.location !== "all" && row.location_id !== f.location) return false;
     if (f.stock !== "all" && stockStatus(row.available) !== f.stock) return false;
+    if (f.marketplace !== "all" && marketplaceOf(row) !== f.marketplace) return false;
     return true;
   });
 
@@ -146,8 +155,9 @@ export const CSV_COLUMNS = [
   { label: "Location", value: (row) => row.location_name || row.location_id || "" },
   { label: "Available", value: (row) => (typeof row.available === "number" ? row.available : "Not tracked") },
   { label: "Stock status", value: (row) => STOCK_LABELS[stockStatus(row.available)] },
-  { key: "product_id", label: "Shopify product ID" },
+  { key: "product_id", label: "Marketplace product ID" },
   { key: "updated_at", label: "Updated" },
+  { label: "Marketplace", value: (row) => row.platform || "Shopify" },
 ];
 
 export function exportFilename(prefix) {

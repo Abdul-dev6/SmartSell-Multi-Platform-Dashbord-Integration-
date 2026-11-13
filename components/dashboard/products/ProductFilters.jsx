@@ -1,6 +1,6 @@
 "use client";
 
-import { FilterSelect, ResultSummary, SearchInput } from "@/components/dashboard/shared/FilterControls";
+import { FilterSelect, MarketplaceSelect, ResultSummary, SearchInput } from "@/components/dashboard/shared/FilterControls";
 import { DEFAULT_FILTERS, STATUS_LABELS, isFiltered } from "@/components/dashboard/shared/catalogFilters";
 
 export default function ProductFilters({ filters, setFilters, productTypes = [], shown = 0, total = 0 }) {
@@ -8,7 +8,7 @@ export default function ProductFilters({ filters, setFilters, productTypes = [],
 
   return (
     <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
         <div className="lg:col-span-2">
           <SearchInput
             value={filters.query}
@@ -17,6 +17,8 @@ export default function ProductFilters({ filters, setFilters, productTypes = [],
             label="Search products"
           />
         </div>
+
+        <MarketplaceSelect value={filters.marketplace} onChange={set("marketplace")} />
 
         <FilterSelect
           label="Product type"

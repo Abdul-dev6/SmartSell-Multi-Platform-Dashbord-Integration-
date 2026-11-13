@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Download } from "lucide-react";
-import { FilterSelect, ResultSummary, SearchInput } from "@/components/dashboard/shared/FilterControls";
+import { FilterSelect, MarketplaceSelect, ResultSummary, SearchInput } from "@/components/dashboard/shared/FilterControls";
 import { DEFAULT_FILTERS, SORT_OPTIONS, STATUS_LABELS, isFiltered } from "@/components/dashboard/shared/catalogFilters";
 
 export default function ListingFilters({
@@ -23,7 +23,7 @@ export default function ListingFilters({
       transition={{ delay: 0.3 }}
       className="mt-8 bg-white rounded-2xl shadow-lg p-4 sm:p-6"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className="md:col-span-2 xl:col-span-2">
           <SearchInput
             value={filters.query}
@@ -32,6 +32,8 @@ export default function ListingFilters({
             label="Search listings"
           />
         </div>
+
+        <MarketplaceSelect value={filters.marketplace} onChange={set("marketplace")} />
 
         <FilterSelect
           label="Status"
