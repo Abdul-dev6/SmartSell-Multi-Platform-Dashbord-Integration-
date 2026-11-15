@@ -225,6 +225,20 @@ describe("signature verification (POST)", () => {
     expect(await EbayAccount.countDocuments()).toBe(1);
   });
 
+  it("logs which stage failed (token vs key fetch) without the token, secret or body", async () => {
+    const logs = vi.spyOn(console, "error").mockImplementation(() => {});
+    getApplicationToken.mockRejectedValueOnce(new Error("invalid_client prod-secret"));
+    expect((await deliver(deletionPayload("U1"))).status).toBe(500);
+    stubKeyEndpoint({ status: 404 });
+    expect((await deliver(deletionPayload("U1"))).status).toBe(500);
+    const entries = logs.mock.calls.map(([line]) => JSON.parse(line));
+    expect(entries[0]).toMatchObject({ event: "ebay_deletion_key_unavailable", environment: "production", stage: "token" });
+    expect(entries[1]).toMatchObject({ event: "ebay_deletion_key_unavailable", stage: "key_fetch", status: 404 });
+    const text = JSON.stringify(entries);
+    expect(text).not.toMatch(/prod-secret|prod-client|app-token|U1|seller_one/);
+    expect(await EbayDeletionNotification.countDocuments()).toBe(0);
+  });
+
   it("caches the public key per key ID", async () => {
     await deliver(deletionPayload("a"));
     await deliver(deletionPayload("b"));
@@ -329,6 +343,26 @@ describe("deletion and data isolation", () => {
     expect((await EbayDeletionNotification.findOne({ notificationId: "retry-1" }).lean()).status).toBe("failed");
     expect((await deliver(payload)).status).toBe(204);
     expect(await EbayAccount.findById(w.target._id)).toBeNull();
+  });
+
+  it("eBay's Send Test Notification (signed, unknown test user) is verified and acknowledged with 204", async () => {
+    const w = await world();
+    const payload = deletionPayload("testUserId123", { username: "test_user", notificationId: "ebay-portal-test" });
+    expect((await deliver(payload)).status).toBe(204);
+    expect(await EbayAccount.countDocuments()).toBe(4);
+    expect(await EbayDeletionNotification.findOne({ notificationId: "ebay-portal-test" }).lean()).toMatchObject({ status: "completed" });
+    expect(w).toBeTruthy();
+  });
+
+  it("an unexpected error is not acknowledged and its message (may hold personal data) is not logged", async () => {
+    await world();
+    const logs = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(EbayProduct, "deleteMany").mockRejectedValueOnce(new TypeError("cannot read U1 seller_one"));
+    expect((await deliver(deletionPayload("U1", { notificationId: "boom-1" }))).status).toBe(500);
+    const text = logs.mock.calls.flat().join(" ");
+    expect(text).toContain("ebay_deletion_failed");
+    expect(text).not.toMatch(/U1|seller_one/);
+    expect(await EbayAccount.countDocuments({ ebayUserId: "U1", environment: "production" })).toBe(1);
   });
 
   it("an eBay user with no SmartSell account is acknowledged with nothing deleted", async () => {

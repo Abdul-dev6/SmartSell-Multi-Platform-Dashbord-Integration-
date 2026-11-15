@@ -75,7 +75,12 @@ export async function POST(req) {
       logWarn(req, "ebay_deletion_signature_rejected", null, { reason: error.reason });
       return json({ error: "signature_verification_failed" }, 412);
     }
-    logError(req, "ebay_deletion_key_unavailable", error, { message: false });
+    if (error instanceof SignatureError) {
+      logError(req, "ebay_deletion_key_unavailable", null, { environment, ...error.detail });
+    } else {
+      logError(req, "ebay_deletion_verification_error", error, { message: false });
+    }
+    // Not verified, so not processed; not acknowledged, so eBay retries.
     return json({ error: "temporarily_unavailable" }, 500);
   }
 
