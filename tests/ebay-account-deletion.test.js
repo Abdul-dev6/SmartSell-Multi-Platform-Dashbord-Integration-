@@ -233,6 +233,7 @@ describe("signature verification (POST)", () => {
     expect((await deliver(deletionPayload("U1"))).status).toBe(500);
     const entries = logs.mock.calls.map(([line]) => JSON.parse(line));
     expect(entries[0]).toMatchObject({ event: "ebay_deletion_key_unavailable", environment: "production", stage: "token" });
+    expect(entries[0]).not.toHaveProperty("message");
     expect(entries[1]).toMatchObject({ event: "ebay_deletion_key_unavailable", stage: "key_fetch", status: 404 });
     const text = JSON.stringify(entries);
     expect(text).not.toMatch(/prod-secret|prod-client|app-token|U1|seller_one/);
