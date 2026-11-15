@@ -114,6 +114,82 @@ describe("challenge verification (GET)", () => {
   });
 });
 
+describe("configuration: challenge vs notification", () => {
+  const onlyChallengeVars = () => {
+    delete process.env.EBAY_PRODUCTION_CLIENT_ID;
+    delete process.env.EBAY_PRODUCTION_CLIENT_SECRET;
+    delete process.env.EBAY_NOTIFICATION_ENVIRONMENT;
+  };
+  async function seedTarget() {
+    const owner = await createUser();
+    const account = await EbayAccount.create({ user: owner._id, environment: "production", ebayUserId: "U1", username: "seller_one", marketplaceId: "EBAY_US" });
+    await EbayProduct.create({ user: owner._id, ebayAccount: account._id, sku: "SKU-CFG", title: "Item" });
+    return account;
+  }
+  async function expectNothingProcessed(account) {
+    expect(await EbayAccount.findById(account._id)).not.toBeNull();
+    expect(await EbayProduct.countDocuments({ ebayAccount: account._id })).toBe(1);
+    expect(await EbayDeletionNotification.countDocuments()).toBe(0);
+    expect(getApplicationToken).not.toHaveBeenCalled();
+    expect(keyFetches).toHaveLength(0);
+  }
+
+  it("GET answers a valid 64-character challengeResponse with only the endpoint and token set", async () => {
+    onlyChallengeVars();
+    const res = await GET(new NextRequest(`${ENDPOINT}?challenge_code=only-two-vars`));
+    expect(res.status).toBe(200);
+    const { challengeResponse } = await res.json();
+    expect(challengeResponse).toMatch(/^[0-9a-f]{64}$/);
+    expect(challengeResponse).toBe(crypto.createHash("sha256").update("only-two-vars" + TOKEN + ENDPOINT).digest("hex"));
+  });
+
+  it("GET's not-configured log names only the two challenge settings", async () => {
+    onlyChallengeVars();
+    delete process.env.EBAY_NOTIFICATION_ENDPOINT;
+    const logs = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await GET(new NextRequest(`${ENDPOINT}?challenge_code=x`))).status).toBe(500);
+    const logged = logs.mock.calls.flat().join(" ");
+    expect(logged).toContain("EBAY_NOTIFICATION_ENDPOINT");
+    expect(logged).not.toContain("CLIENT_ID");
+  });
+
+  it("POST without Production credentials is not processed, even when correctly signed", async () => {
+    getApplicationToken.mockClear();
+    onlyChallengeVars();
+    const account = await seedTarget();
+    stubKeyEndpoint();
+    const res = await deliver(deletionPayload("U1"));
+    expect(res.status).toBe(500);
+    await expectNothingProcessed(account);
+  });
+
+  it("POST for Production never falls back to Sandbox credentials", async () => {
+    getApplicationToken.mockClear();
+    onlyChallengeVars();
+    process.env.EBAY_NOTIFICATION_ENVIRONMENT = "production";
+    process.env.EBAY_SANDBOX_CLIENT_ID = "sandbox-client";
+    process.env.EBAY_SANDBOX_CLIENT_SECRET = "sandbox-secret";
+    try {
+      const account = await seedTarget();
+      stubKeyEndpoint();
+      const res = await deliver(deletionPayload("U1"));
+      expect(res.status).toBe(500);
+      await expectNothingProcessed(account);
+    } finally {
+      delete process.env.EBAY_SANDBOX_CLIENT_ID;
+      delete process.env.EBAY_SANDBOX_CLIENT_SECRET;
+    }
+  });
+
+  it("POST with Production credentials fetches the key with the Production keyset and API", async () => {
+    getApplicationToken.mockClear();
+    await seedTarget();
+    expect((await deliver(deletionPayload("U1"))).status).toBe(204);
+    expect(getApplicationToken).toHaveBeenCalledWith(expect.objectContaining({ environment: "production", clientId: "prod-client" }));
+    expect(keyFetches[0].url).toMatch(/^https:\/\/api\.ebay\.com\/commerce\/notification\/v1\/public_key\//);
+  });
+});
+
 describe("signature verification (POST)", () => {
   it("verifies with eBay's public key fetched by key ID using an application token", async () => {
     const res = await deliver(deletionPayload("unknown-user"));

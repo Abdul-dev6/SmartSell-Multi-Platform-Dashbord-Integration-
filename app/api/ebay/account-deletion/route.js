@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import {
-  getNotificationEndpoint,
-  getNotificationEnvironment,
-  getNotificationKeysetConfig,
-  getVerificationToken,
+  getChallengeConfig,
+  getSignatureConfig,
+  missingChallengeSettings,
   missingNotificationSettings,
 } from "@/lib/ebay/notifications/config";
 import { challengeResponse, SignatureError, verifyNotificationSignature } from "@/lib/ebay/notifications/verify";
@@ -35,25 +34,27 @@ export async function GET(req) {
   if (!challengeCode || challengeCode.length > MAX_CHALLENGE_LENGTH) {
     return json({ error: "challenge_code is required" }, 400);
   }
-  const endpoint = getNotificationEndpoint();
-  const token = getVerificationToken();
-  if (!endpoint || !token) {
-    logError(req, "ebay_deletion_not_configured", null, { missing: missingNotificationSettings() });
+  // Only the endpoint and verification token are needed here; the client
+  // ID/secret are used by POST alone.
+  const challenge = getChallengeConfig();
+  if (!challenge) {
+    logError(req, "ebay_deletion_not_configured", null, { phase: "challenge", missing: missingChallengeSettings() });
     return json({ error: "not_configured" }, 500);
   }
   // A JSON library builds the body (eBay warns that hand-built strings can
   // gain a BOM); Content-Type is application/json.
-  return json({ challengeResponse: challengeResponse(challengeCode, token, endpoint) });
+  return json({ challengeResponse: challengeResponse(challengeCode, challenge.token, challenge.endpoint) });
 }
 
 export async function POST(req) {
-  const environment = getNotificationEnvironment();
-  const keyset = getNotificationKeysetConfig();
-  if (!environment || !keyset || !getNotificationEndpoint() || !getVerificationToken()) {
-    // Not acknowledged, so eBay retries once it is configured.
-    logError(req, "ebay_deletion_not_configured", null, { missing: missingNotificationSettings() });
+  const config = getSignatureConfig();
+  if (!config) {
+    // Without the keyset nothing can be verified, so nothing is processed;
+    // not acknowledged, so eBay retries once it is configured.
+    logError(req, "ebay_deletion_not_configured", null, { phase: "notification", missing: missingNotificationSettings() });
     return json({ error: "not_configured" }, 500);
   }
+  const { environment, keyset } = config;
 
   if (Number(req.headers.get("content-length") || 0) > MAX_BODY_BYTES) return json({ error: "payload_too_large" }, 413);
   const rawBody = await req.text();
