@@ -7,7 +7,8 @@ const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/Pricing", label: "Pricing" },
   { href: "/About", label: "About" },
-  { href: "/Contact", label: "Contact" }
+  { href: "/Contact", label: "Contact" },
+  { href: "/Privacy", label: "Privacy" },
 ];
 
 const Navbarpage = () => {
