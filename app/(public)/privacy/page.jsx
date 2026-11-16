@@ -36,9 +36,11 @@ const sections = [
         <p>We collect only the data needed to run SmartSell:</p>
         <ul>
           <li>
-            <strong>Account data:</strong> your name, email address and
-            password when you sign up. Your password is stored only as a
-            one-way hash; we cannot read it.
+            <strong>Account data:</strong> your name and email address. You
+            can sign up with an email and password, or sign in with Google or
+            GitHub. A password you create is stored only as a one-way hash; we
+            cannot read it. When you use Google or GitHub, we never see or
+            store your Google or GitHub password.
           </li>
           <li>
             <strong>Marketplace data:</strong> when you connect a store, we

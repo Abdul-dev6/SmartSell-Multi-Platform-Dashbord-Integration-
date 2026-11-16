@@ -133,7 +133,7 @@ describe("passwords", () => {
 
     const ok = await signup(apiRequest("/api/auth/signup", { body: { email: "ok@example.com", password: "correct horse battery" } }));
     expect(ok.status).toBe(201);
-    const stored = await User.findOne({ email: "ok@example.com" }).lean();
+    const stored = await User.findOne({ email: "ok@example.com" }).select("+password").lean();
     expect(bcrypt.getRounds(stored.password)).toBe(12);
   });
 
@@ -141,7 +141,7 @@ describe("passwords", () => {
     await User.create({ email: "old@example.com", password: await bcrypt.hash("correct horse battery", 10) });
     const res = await login(apiRequest("/api/auth/login", { body: { email: "old@example.com", password: "correct horse battery" } }));
     expect(res.status).toBe(200);
-    const stored = await User.findOne({ email: "old@example.com" }).lean();
+    const stored = await User.findOne({ email: "old@example.com" }).select("+password").lean();
     expect(bcrypt.getRounds(stored.password)).toBe(12);
     expect(await bcrypt.compare("correct horse battery", stored.password)).toBe(true);
   });

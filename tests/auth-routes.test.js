@@ -30,7 +30,7 @@ describe("signup", () => {
   it("creates a user with a hashed password and normalized email", async () => {
     const res = await signup(jsonRequest("/api/auth/signup", { email: " New@Example.com ", password: "longenough" }));
     expect(res.status).toBe(201);
-    const user = await User.findOne({ email: "new@example.com" });
+    const user = await User.findOne({ email: "new@example.com" }).select("+password");
     expect(user).not.toBe(null);
     expect(user.password).not.toBe("longenough");
     expect(await bcrypt.compare("longenough", user.password)).toBe(true);

@@ -5,7 +5,9 @@ const userschema = new mongoose.Schema(
     // Always stored trimmed and lowercase, so lookups can use the unique
     // index with an exact match.
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String },
+    // bcrypt hash. Never returned unless selected explicitly
+    // (.select("+password")), so no query can leak it by accident.
+    password: { type: String, select: false },
     name: { type: String },
     // Raised by "Sign out everywhere"; sessions carrying an older value are
     // no longer accepted.

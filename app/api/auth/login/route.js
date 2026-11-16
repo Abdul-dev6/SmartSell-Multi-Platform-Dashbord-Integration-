@@ -45,7 +45,7 @@ export async function POST(req) {
       }
     }
 
-    const user = await UserSchema.findOne({ email });
+    const user = await UserSchema.findOne({ email }).select("+password");
 
     // Always runs a full bcrypt comparison, so an unknown email takes as long
     // to answer as a wrong password.

@@ -335,7 +335,7 @@ describe("profile editing", () => {
     const fresh = res.cookies.get("token").value;
     expect(await sessionStatus(fresh)).toBe("valid");
     expect(await sessionStatus(otherDevice)).toBe("invalid");
-    const stored = await User.findById(user._id).lean();
+    const stored = await User.findById(user._id).select("+password").lean();
     expect(await bcrypt.compare("new-password-1", stored.password)).toBe(true);
     expect((await Notification.find({ user: user._id }).sort({ createdAt: -1 }).lean())[0].title).toBe("Password changed");
   });
