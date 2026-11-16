@@ -112,10 +112,13 @@ const sections = [
     body: (
       <>
         <p>
-          When you disconnect a store, we revoke SmartSell&apos;s access and
-          delete its tokens, so we can no longer read from or write to that
-          store. Products and orders already synced are kept so your history
-          and reports stay complete, until you ask us to delete them.
+          When you disconnect a Shopify or eBay store, we revoke
+          SmartSell&apos;s access and delete its tokens, so we can no longer
+          read from or write to that store. Products and orders already synced
+          from Shopify or eBay are kept so your history and reports stay
+          complete, until you ask us to delete them. Amazon data will be
+          handled differently: when a seller disconnects Amazon, we will
+          revoke access and delete their Amazon data (see section 7).
         </p>
         <p>
           When eBay tells us that a user has closed their eBay account, we
