@@ -6,7 +6,7 @@ const productLinks = [
   { href: "/Pricing", label: "Pricing" },
   { href: "/About", label: "About" },
   { href: "/Contact", label: "Contact" },
-  { href: "/Privacy", label: "Privacy Policy" },
+  { href: "/privacy", label: "Privacy Policy" },
 ];
 
 const socialLinks = [
@@ -94,7 +94,7 @@ function Footer() {
             © 2026 <span className="font-semibold text-slate-400">SmartSell™</span>.
             All rights reserved.
           </p>
-          <Link href="/Privacy" className="text-xs text-slate-500 hover:text-blue-400 transition-colors duration-300">
+          <Link href="/privacy" className="text-xs text-slate-500 hover:text-blue-400 transition-colors duration-300">
             Privacy Policy
           </Link>
         </div>

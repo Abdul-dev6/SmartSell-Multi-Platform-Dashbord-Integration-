@@ -10,6 +10,15 @@ const AUTH_PAGES = ["/Login", "/Signup"];
 export async function proxy(req) {
   const { pathname, search } = req.nextUrl;
 
+  // The privacy policy moved from /Privacy to /privacy. Old-case links get a
+  // permanent redirect; the check is exact-case (next.config redirects match
+  // case-insensitively and would loop). The page itself needs no session.
+  if (pathname.toLowerCase() === "/privacy") {
+    return pathname === "/privacy"
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL(`/privacy${search}`, req.url), 308);
+  }
+
   // API routes authenticate themselves; here they get a request ID (logged
   // by the route, returned as x-request-id so users can quote it) and the
   // cross-site check for state-changing requests (no session lookup).
@@ -56,5 +65,5 @@ export async function proxy(req) {
 }
 
 export const config = {
-  matcher: ["/Panel/:path*", "/Login", "/Signup", "/api/:path*"],
+  matcher: ["/Panel/:path*", "/Login", "/Signup", "/api/:path*", "/Privacy", "/PRIVACY"],
 };

@@ -1,4 +1,4 @@
-// /Privacy: SmartSell Privacy Policy (Server Component). Keep the statements
+// /privacy: SmartSell Privacy Policy (Server Component). Keep the statements
 // in line with what the code actually does (auth, stored fields, disconnect
 // and deletion behaviour).
 
@@ -130,8 +130,21 @@ const sections = [
     ),
   },
   {
+    id: "amazon",
+    title: "7. Amazon data (in development)",
+    body: (
+      <ul>
+        <li>When Amazon support launches, sellers will connect through Amazon&apos;s official authorization. We will access only listings, prices, inventory, order status and financial summaries for the seller&apos;s own business.</li>
+        <li>We will not request or store Amazon buyer personal information, such as names, addresses, phone numbers or emails.</li>
+        <li>Amazon refresh tokens will be encrypted before they are stored.</li>
+        <li>When a seller disconnects Amazon, we will revoke access and delete their Amazon data.</li>
+        <li>Amazon data is never sold or shared, and each seller sees only their own data.</li>
+      </ul>
+    ),
+  },
+  {
     id: "your-rights",
-    title: "7. Your choices",
+    title: "8. Your choices",
     body: (
       <ul>
         <li>Disconnect any marketplace from your dashboard at any time.</li>
@@ -142,7 +155,7 @@ const sections = [
   },
   {
     id: "changes",
-    title: "8. Changes to this policy",
+    title: "9. Changes to this policy",
     body: (
       <p>
         If we change this policy, we will update the date at the top of this
@@ -152,7 +165,7 @@ const sections = [
   },
   {
     id: "contact",
-    title: "9. Contact",
+    title: "10. Contact",
     body: (
       <p>
         Questions about privacy or your data? Email{" "}
