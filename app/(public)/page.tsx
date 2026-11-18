@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import Link from "next/link";
+import ComingSoonBadge from "@/components/public/ComingSoonBadge";
 function useReveal(
   threshold = 0.2,
 ): [RefObject<HTMLDivElement | null>, boolean] {
@@ -43,19 +44,19 @@ function useReveal(
 /* ----------------------------------------------------------------
    Data
 ------------------------------------------------------------------- */
+// Only marketplaces SmartSell supports, plus Amazon marked as coming soon.
 const MARKETPLACES = [
-  "Amazon",
-  "Walmart",
-  "eBay",
-  "Shopify",
-  "Etsy",
-  "TikTok Shop",
+  { name: "Shopify", soon: false },
+  { name: "eBay", soon: false },
+  { name: "Amazon", soon: true },
 ];
+// Repeated so each marquee track is as long as before and loops smoothly.
+const MARQUEE_ITEMS = Array.from({ length: 4 }, () => MARKETPLACES).flat();
 
 const FEATURES = [
   {
-    title: "Unified Inventory Sync",
-    desc: "Stock updates on one channel push everywhere instantly, so you never oversell a product that's already gone.",
+    title: "Inventory in One View",
+    desc: "See stock for your Shopify locations and eBay listings side by side, kept up to date by automatic sync.",
     icon: (
       <path
         strokeLinecap="round"
@@ -66,8 +67,8 @@ const FEATURES = [
     ),
   },
   {
-    title: "Centralized Order Queue",
-    desc: "Every order from every marketplace lands in a single fulfillment queue — no more tab-switching to ship.",
+    title: "Shopify Orders in One List",
+    desc: "Shopify orders sync automatically into one list with totals and fees, so you can follow sales without switching tabs.",
     icon: (
       <path
         strokeLinecap="round"
@@ -78,8 +79,8 @@ const FEATURES = [
     ),
   },
   {
-    title: "Cross-Channel Analytics",
-    desc: "See revenue, best-sellers, and channel performance side by side, so you know where to double down.",
+    title: "Sales and Profit Analytics",
+    desc: "See revenue, fees, expenses and profit from your Shopify orders for any period, so you know where you stand.",
     icon: (
       <path
         strokeLinecap="round"
@@ -90,8 +91,8 @@ const FEATURES = [
     ),
   },
   {
-    title: "Bulk Listing Push",
-    desc: "Create a listing once and publish it to every connected marketplace, formatted to each channel's rules.",
+    title: "Create and Edit Listings",
+    desc: "Create, edit and delete Shopify products and eBay listings from SmartSell; each change is sent to that marketplace for you.",
     icon: (
       <path
         strokeLinecap="round"
@@ -107,12 +108,12 @@ const STEPS = [
   {
     n: "01",
     title: "Connect your stores",
-    desc: "Link Amazon, Walmart, eBay, Shopify, and Etsy in a few clicks with secure OAuth.",
+    desc: "Link your Shopify and eBay stores in a few clicks with secure OAuth. Amazon is coming soon.",
   },
   {
     n: "02",
     title: "Sync automatically",
-    desc: "Inventory, orders, and pricing stay in lockstep across every channel in real time.",
+    desc: "Products, stock and Shopify orders sync automatically, and Shopify changes arrive live through webhooks.",
   },
   {
     n: "03",
@@ -178,9 +179,9 @@ const HomePage = () => {
 
         <div className="relative z-10 mt-16 flex flex-col sm:flex-row gap-8 sm:gap-16 items-center text-center">
           {[
-            { value: "10K+", label: "Active Stores" },
-            { value: "$2.4B", label: "Revenue Tracked" },
-            { value: "99.9%", label: "Uptime SLA" },
+            { value: "2", label: "Live Marketplaces" },
+            { value: "OAuth", label: "Secure Store Connection" },
+            { value: "Live", label: "Shopify Webhook Updates" },
           ].map(({ value, label }) => (
             <div key={label} className="flex flex-col items-center">
               <span className="text-3xl font-black text-white">{value}</span>
@@ -206,10 +207,11 @@ const HomePage = () => {
         <div className="group relative flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
           {/* two identical tracks placed back to back = seamless loop */}
           <div className="flex shrink-0 items-center animate-marquee group-hover:[animation-play-state:paused] motion-reduce:animate-none">
-            {[...MARKETPLACES, ...MARKETPLACES].map((m, i) => (
+            {MARQUEE_ITEMS.map((m, i) => (
               <div key={i} className="flex items-center shrink-0">
                 <span className="px-7 text-lg sm:text-xl font-bold text-slate-400 hover:text-white hover:scale-110 transition-all duration-300 whitespace-nowrap cursor-default">
-                  {m}
+                  {m.name}
+                  {m.soon && <ComingSoonBadge tone="dark" className="ml-2" />}
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-700 shrink-0" />
               </div>
@@ -219,10 +221,11 @@ const HomePage = () => {
             aria-hidden="true"
             className="flex shrink-0 items-center animate-marquee group-hover:[animation-play-state:paused] motion-reduce:animate-none"
           >
-            {[...MARKETPLACES, ...MARKETPLACES].map((m, i) => (
+            {MARQUEE_ITEMS.map((m, i) => (
               <div key={i} className="flex items-center shrink-0">
                 <span className="px-7 text-lg sm:text-xl font-bold text-slate-400 hover:text-white hover:scale-110 transition-all duration-300 whitespace-nowrap cursor-default">
-                  {m}
+                  {m.name}
+                  {m.soon && <ComingSoonBadge tone="dark" className="ml-2" />}
                 </span>
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-700 shrink-0" />
               </div>

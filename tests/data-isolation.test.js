@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import AmazonAccount from "@/models/AmazonAccount";
+import AmazonListing from "@/models/AmazonListing";
 import CalendarEvent from "@/models/CalendarEvent";
 import EbayAccount from "@/models/EbayAccount";
 import EbayProduct from "@/models/EbayProduct";
@@ -9,6 +11,7 @@ import Product from "@/models/Product";
 import Shopifystore from "@/models/ShopifyStore";
 import User from "@/models/User";
 import { linkStore } from "@/lib/shopify/stores";
+import { linkAmazonAccount } from "@/lib/amazon/accounts";
 import { createUser, resetDatabase, sessionCookieFor } from "./helpers/db";
 
 import * as productItem from "@/app/api/products/[id]/route";
@@ -45,6 +48,26 @@ import * as dashboard from "@/app/api/dashboard/summary/route";
 import * as me from "@/app/api/auth/me/route";
 import * as password from "@/app/api/auth/password/route";
 import * as logoutAll from "@/app/api/auth/logout-all/route";
+import * as amazonStatus from "@/app/api/amazon/status/route";
+import * as amazonAccountItem from "@/app/api/amazon/accounts/[id]/route";
+import * as amazonSandbox from "@/app/api/amazon/sandbox/route";
+import * as amazonSandboxListings from "@/app/api/amazon/sandbox/listings/route";
+import * as amazonListings from "@/app/api/amazon/listings/route";
+import * as amazonListingItem from "@/app/api/amazon/listings/[id]/route";
+import * as amazonListingClose from "@/app/api/amazon/listings/[id]/close/route";
+import * as amazonProductTypes from "@/app/api/amazon/product-types/route";
+import * as amazonProductType from "@/app/api/amazon/product-types/[productType]/route";
+import * as amazonMarketplaces from "@/app/api/amazon/marketplaces/route";
+import * as amazonPricing from "@/app/api/amazon/pricing/route";
+import * as amazonInventory from "@/app/api/amazon/inventory/route";
+import * as amazonOrders from "@/app/api/amazon/orders/route";
+import * as amazonFinances from "@/app/api/amazon/finances/route";
+import * as amazonSync from "@/app/api/amazon/sync/route";
+import * as amazonConnect from "@/app/api/amazon/connect/route";
+import * as amazonLogin from "@/app/api/amazon/login/route";
+import * as amazonCallback from "@/app/api/amazon/callback/route";
+import AmazonOrder from "@/models/AmazonOrder";
+import AmazonFinancialEvent from "@/models/AmazonFinancialEvent";
 
 // Every seller sees and changes only their own records: seller B, signed in,
 // gets 404 for each of seller A's records and nothing of A's changes; no
@@ -91,13 +114,17 @@ async function seedSellerA() {
   const expense = await Expense.create({ user: user._id, shopifyStore: store._id, category: "advertising", amount: 25, currency: "USD", date: new Date("2026-11-01T12:00:00Z") });
   const event = await CalendarEvent.create({ user: user._id, title: "A's event", date: "2026-11-20", endDate: "2026-11-20", time: "10:00", color: "blue" });
   const note = await Notification.create({ user: user._id, type: "info", title: "A's notice", expiresAt: new Date(Date.now() + 86400000) });
-  return { user, store, product, ebayAccount, ebayProduct, expense, event, note, cookie: sessionCookieFor(user) };
+  const amazonAccount = await linkAmazonAccount({ userId: user._id, environment: "sandbox", sellingPartnerId: "A1SELLERA", marketplaceIds: ["ATVPDKIKX0DER"], refreshToken: "Atzr|a-amazon-token" });
+  const amazonListing = await AmazonListing.create({ user: user._id, amazonAccount: amazonAccount._id, environment: "sandbox", marketplaceId: "ATVPDKIKX0DER", sku: "A-AMZ-SKU", itemName: "A's Amazon listing", productType: "LUGGAGE", fulfillmentChannel: "DEFAULT", quantity: 3 });
+  await AmazonOrder.create({ user: user._id, amazonAccount: amazonAccount._id, environment: "sandbox", orderId: "A-ORDER-1" });
+  await AmazonFinancialEvent.create({ user: user._id, amazonAccount: amazonAccount._id, environment: "sandbox", kind: "transaction", eventId: "A-TXN-1" });
+  return { user, store, product, ebayAccount, ebayProduct, expense, event, note, amazonAccount, amazonListing, cookie: sessionCookieFor(user) };
 }
 
 // Everything of A's, as stored, to compare before and after B's attempts.
 const snapshotA = async () => {
   const u = A.user._id;
-  const [store, product, ebayAccount, ebayProduct, expense, event, notes] = await Promise.all([
+  const [store, product, ebayAccount, ebayProduct, expense, event, notes, amazonAccount, amazonListings, amazonOrders, amazonFinancial] = await Promise.all([
     Shopifystore.findById(A.store._id).select("+accessToken").lean(),
     Product.findById(A.product._id).lean(),
     EbayAccount.findById(A.ebayAccount._id).select("+refreshTokenEnc").lean(),
@@ -105,8 +132,12 @@ const snapshotA = async () => {
     Expense.findById(A.expense._id).lean(),
     CalendarEvent.findById(A.event._id).lean(),
     Notification.find({ user: u }).lean(),
+    AmazonAccount.findById(A.amazonAccount._id).select("+refreshTokenEnc").lean(),
+    AmazonListing.find({ user: u }).lean(),
+    AmazonOrder.find({ user: u }).lean(),
+    AmazonFinancialEvent.find({ user: u }).lean(),
   ]);
-  return JSON.stringify({ store, product, ebayAccount, ebayProduct, expense, event, notes });
+  return JSON.stringify({ store, product, ebayAccount, ebayProduct, expense, event, notes, amazonAccount, amazonListings, amazonOrders, amazonFinancial });
 };
 
 beforeEach(async () => {
@@ -149,7 +180,21 @@ describe("seller B cannot read or change seller A's records", () => {
       "PATCH expenses/[id]": () => expenseItem.PATCH(req("PATCH", `/api/expenses/${A.expense._id}`, c, { amount: "1" }), params(A.expense._id)),
       "DELETE expenses/[id]": () => expenseItem.DELETE(req("DELETE", `/api/expenses/${A.expense._id}`, c), params(A.expense._id)),
       "DELETE calendar-events/[id]": () => calendarItem.DELETE(req("DELETE", `/api/calendar-events/${A.event._id}`, c), params(A.event._id)),
+      "DELETE amazon/accounts/[id]": () => amazonAccountItem.DELETE(req("DELETE", `/api/amazon/accounts/${A.amazonAccount._id}`, c), params(A.amazonAccount._id)),
+      "GET amazon/listings/[id]": () => amazonListingItem.GET(req("GET", `/api/amazon/listings/${A.amazonListing._id}`, c), params(A.amazonListing._id)),
+      "GET amazon/listings/[id]?refresh=1": () => amazonListingItem.GET(req("GET", `/api/amazon/listings/${A.amazonListing._id}?refresh=1`, c), params(A.amazonListing._id)),
+      "PATCH amazon/listings/[id]": () => amazonListingItem.PATCH(req("PATCH", `/api/amazon/listings/${A.amazonListing._id}`, c, { title: "Hacked" }), params(A.amazonListing._id)),
+      "DELETE amazon/listings/[id]": () => amazonListingItem.DELETE(req("DELETE", `/api/amazon/listings/${A.amazonListing._id}`, c, { confirm: true }), params(A.amazonListing._id)),
+      "POST amazon/listings/[id]/close": () => amazonListingClose.POST(req("POST", `/api/amazon/listings/${A.amazonListing._id}/close`, c), params(A.amazonListing._id)),
+      "POST amazon/listings (A's account)": () => amazonListings.POST(req("POST", "/api/amazon/listings", c, { accountId: String(A.amazonAccount._id), sku: "X1", marketplaceId: "ATVPDKIKX0DER", productType: "LUGGAGE", fulfillment: "MFN" })),
+      "GET amazon/marketplaces?accountId": () => amazonMarketplaces.GET(req("GET", `/api/amazon/marketplaces?accountId=${A.amazonAccount._id}&refresh=1`, c)),
+      "GET amazon/product-types?accountId": () => amazonProductTypes.GET(req("GET", `/api/amazon/product-types?accountId=${A.amazonAccount._id}`, c)),
+      "GET amazon/product-types/[type]?accountId": () => amazonProductType.GET(req("GET", `/api/amazon/product-types/LUGGAGE?accountId=${A.amazonAccount._id}`, c), { params: Promise.resolve({ productType: "LUGGAGE" }) }),
+      "GET amazon/sync?accountId": () => amazonSync.GET(req("GET", `/api/amazon/sync?accountId=${A.amazonAccount._id}`, c)),
+      "POST amazon/sync (A's account)": () => amazonSync.POST(req("POST", "/api/amazon/sync", c, { accountId: String(A.amazonAccount._id) })),
     };
+    // Importing a sandbox listing into A's account is refused (B has none).
+    expect((await amazonSandboxListings.POST(req("POST", "/api/amazon/sandbox/listings", c, { accountId: String(A.amazonAccount._id) }))).status).toBe(409);
     const statuses = {};
     for (const [name, call] of Object.entries(attempts)) statuses[name] = (await call()).status;
     expect(statuses).toEqual(Object.fromEntries(Object.keys(attempts).map((k) => [k, 404])));
@@ -175,11 +220,20 @@ describe("seller B cannot read or change seller A's records", () => {
       notifications.GET(req("GET", "/api/notifications", c)).then((r) => r.json()),
       inventory.GET(req("GET", "/api/inventory", c)).then((r) => r.json()),
       dashboard.GET(req("GET", "/api/dashboard/summary", c)).then((r) => r.json()),
+      amazonStatus.GET(req("GET", "/api/amazon/status", c)).then((r) => r.json()),
+      amazonSandbox.GET(req("GET", `/api/amazon/sandbox?accountId=${A.amazonAccount._id}`, c)).then((r) => r.json()),
+      inventory.GET(req("GET", "/api/inventory?include=amazonSandbox", c)).then((r) => r.json()),
+      amazonListings.GET(req("GET", "/api/amazon/listings", c)).then((r) => r.json()),
+      amazonListings.GET(req("GET", `/api/amazon/listings?accountId=${A.amazonAccount._id}`, c)).then((r) => r.json()),
+      amazonPricing.GET(req("GET", "/api/amazon/pricing", c)).then((r) => r.json()),
+      amazonInventory.GET(req("GET", "/api/amazon/inventory", c)).then((r) => r.json()),
+      amazonOrders.GET(req("GET", `/api/amazon/orders?accountId=${A.amazonAccount._id}`, c)).then((r) => r.json()),
+      amazonFinances.GET(req("GET", `/api/amazon/finances?accountId=${A.amazonAccount._id}`, c)).then((r) => r.json()),
     ]));
-    for (const id of [A.store._id, A.product._id, A.ebayAccount._id, A.ebayProduct._id, A.expense._id, A.event._id, A.note._id]) {
+    for (const id of [A.store._id, A.product._id, A.ebayAccount._id, A.ebayProduct._id, A.expense._id, A.event._id, A.note._id, A.amazonAccount._id, A.amazonListing._id]) {
       expect(text).not.toContain(String(id));
     }
-    for (const value of [A.store.shop, "seller_a", "A-EBAY", "A's mug", "A's listing", "A's event", "A's notice"]) {
+    for (const value of [A.store.shop, "seller_a", "A-EBAY", "A's mug", "A's listing", "A's event", "A's notice", "A1SELLERA", "A-AMZ-SKU", "A-ORDER-1", "A-TXN-1"]) {
       expect(text).not.toContain(value);
     }
 
@@ -206,9 +260,10 @@ describe("seller B cannot read or change seller A's records", () => {
       productItem.GET(req("GET", `/api/products/${A.product._id}`, c), params(A.product._id)).then((r) => r.text()),
       ebayProductItem.GET(req("GET", `/api/ebay/products/${A.ebayProduct._id}`, c), params(A.ebayProduct._id)).then((r) => r.text()),
       inventory.GET(req("GET", "/api/inventory", c)).then((r) => r.text()),
+      amazonStatus.GET(req("GET", "/api/amazon/status", c)).then((r) => r.text()),
     ]);
     const text = bodies.join("\n");
-    for (const secret of ["$2b$12$", "reset-hash-secret", "a-token", '"enc"', "refreshTokenEnc", "accessToken", "passwordResetHash"]) {
+    for (const secret of ["$2b$12$", "reset-hash-secret", "a-token", '"enc"', "refreshTokenEnc", "accessToken", "passwordResetHash", "Atzr|", "a-amazon-token"]) {
       expect(text).not.toContain(secret);
     }
     // The hash is not even loaded unless a query asks for it.
@@ -263,11 +318,39 @@ describe("no session", () => {
       "auth/me PATCH": () => me.PATCH(req("PATCH", "/api/auth/me", null, {})),
       "auth/password POST": () => password.POST(req("POST", "/api/auth/password", null, {})),
       "auth/logout-all POST": () => logoutAll.POST(req("POST", "/api/auth/logout-all")),
+      "amazon/status GET": () => amazonStatus.GET(req("GET", "/api/amazon/status")),
+      "amazon/accounts/[id] DELETE": () => amazonAccountItem.DELETE(req("DELETE", `/api/amazon/accounts/${id}`), params(id)),
+      "amazon/sandbox GET": () => amazonSandbox.GET(req("GET", "/api/amazon/sandbox")),
+      "amazon/sandbox POST": () => amazonSandbox.POST(req("POST", "/api/amazon/sandbox")),
+      "amazon/sandbox/listings POST": () => amazonSandboxListings.POST(req("POST", "/api/amazon/sandbox/listings", null, {})),
+      "amazon/listings GET": () => amazonListings.GET(req("GET", "/api/amazon/listings")),
+      "amazon/listings POST": () => amazonListings.POST(req("POST", "/api/amazon/listings", null, {})),
+      "amazon/listings/[id] GET": () => amazonListingItem.GET(req("GET", `/api/amazon/listings/${id}`), params(id)),
+      "amazon/listings/[id] PATCH": () => amazonListingItem.PATCH(req("PATCH", `/api/amazon/listings/${id}`, null, {}), params(id)),
+      "amazon/listings/[id] DELETE": () => amazonListingItem.DELETE(req("DELETE", `/api/amazon/listings/${id}`, null, {}), params(id)),
+      "amazon/listings/[id]/close POST": () => amazonListingClose.POST(req("POST", `/api/amazon/listings/${id}/close`), params(id)),
+      "amazon/product-types GET": () => amazonProductTypes.GET(req("GET", "/api/amazon/product-types")),
+      "amazon/product-types/[type] GET": () => amazonProductType.GET(req("GET", "/api/amazon/product-types/LUGGAGE"), { params: Promise.resolve({ productType: "LUGGAGE" }) }),
+      "amazon/marketplaces GET": () => amazonMarketplaces.GET(req("GET", "/api/amazon/marketplaces")),
+      "amazon/pricing GET": () => amazonPricing.GET(req("GET", "/api/amazon/pricing")),
+      "amazon/inventory GET": () => amazonInventory.GET(req("GET", "/api/amazon/inventory")),
+      "amazon/orders GET": () => amazonOrders.GET(req("GET", "/api/amazon/orders")),
+      "amazon/finances GET": () => amazonFinances.GET(req("GET", "/api/amazon/finances")),
+      "amazon/sync GET": () => amazonSync.GET(req("GET", "/api/amazon/sync")),
+      "amazon/sync POST": () => amazonSync.POST(req("POST", "/api/amazon/sync", null, {})),
     };
     const statuses = {};
     for (const [name, call] of Object.entries(calls)) statuses[name] = (await call()).status;
     expect(statuses).toEqual(Object.fromEntries(Object.keys(calls).map((k) => [k, 401])));
     expect(outbound).toEqual([]);
+  });
+
+  it("Amazon production OAuth routes are 404 while production connect is disabled", async () => {
+    for (const res of [
+      await amazonConnect.GET(req("GET", "/api/amazon/connect")),
+      await amazonLogin.GET(req("GET", "/api/amazon/login")),
+      await amazonCallback.GET(req("GET", "/api/amazon/callback")),
+    ]) expect(res.status).toBe(404);
   });
 
   it("the connect flows send the browser to /Login instead", async () => {

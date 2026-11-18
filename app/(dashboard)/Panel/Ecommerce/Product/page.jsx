@@ -12,6 +12,7 @@ import MarketplaceSync from "@/components/dashboard/shared/MarketplaceSync";
 import LoadState from "@/components/dashboard/shared/LoadState";
 import useApiData from "@/components/dashboard/shared/useApiData";
 import NeedsAttention from "@/components/dashboard/products/NeedsAttention";
+import AmazonSandboxProducts from "@/components/dashboard/products/AmazonSandboxProducts";
 import useCatalogFilters from "@/components/dashboard/shared/useCatalogFilters";
 
 export default function ProductsPage() {
@@ -29,8 +30,12 @@ function ProductsWithQuery() {
 }
 
 function ProductsContent({ initialQuery }) {
-  const { body, error, loading, reload } = useApiData("/api/inventory");
+  // Also asks for Amazon Sandbox sample rows; the server adds them only where
+  // the Sandbox viewer is enabled (never in a production build).
+  const { body, error, loading, reload } = useApiData("/api/inventory?include=amazonSandbox");
   const ProductData = useMemo(() => body?.data || [], [body]);
+  // Sandbox sample rows are listed, but not counted as real products.
+  const realProducts = useMemo(() => ProductData.filter((row) => !row.sample), [ProductData]);
   const { filters, setFilters, filtered, options } = useCatalogFilters(ProductData, initialQuery);
 
   return (
@@ -46,11 +51,13 @@ function ProductsContent({ initialQuery }) {
       }}
       className="p-4 sm:p-6 lg:p-8 bg-slate-50 min-h-screen"
     >
-      <ProductHeader ProductData={ProductData} />
+      <ProductHeader ProductData={realProducts} />
 
       <MarketplaceSync body={body} onSynced={reload} autoSyncIfNever />
 
       <NeedsAttention items={body?.needsAttention} onChanged={reload} />
+
+      <AmazonSandboxProducts sandbox={body?.amazonSandbox} onImported={reload} />
 
       <LoadState
         loading={loading && !body}
@@ -60,7 +67,7 @@ function ProductsContent({ initialQuery }) {
         onRetry={reload}
       />
 
-      <ProductCards ProductData={ProductData} />
+      <ProductCards ProductData={realProducts} />
 
       <ProductFilters
         filters={filters}

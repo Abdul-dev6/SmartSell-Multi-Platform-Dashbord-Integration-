@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import ComingSoonBadge from "@/components/public/ComingSoonBadge";
 const fadeLeft = {
   hidden: { opacity: 0, x: -80 },
   visible: {
@@ -128,8 +129,9 @@ function AboutUs() {
               </h2>
 
               <p className="text-gray-600 leading-8">
-                Today&apos;s sellers operate across Amazon, Shopify, Walmart, eBay,
-                TikTok Shop, and many other marketplaces.
+                Today&apos;s sellers operate across several marketplaces at
+                once. SmartSell connects your Shopify and eBay stores today, with
+                Amazon <ComingSoonBadge /> on the way.
                 <br />
                 <br />
                 Managing multiple platforms requires more than spreadsheets and

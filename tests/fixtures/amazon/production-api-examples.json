@@ -1,0 +1,603 @@
+{
+  "source": "amzn/selling-partner-api-models (main): x-amzn-api-sandbox static responses, copied verbatim. FBA Inventory has no static examples (dynamic sandbox only).",
+  "putListingsItemAccepted": {
+    "sku": "GM-ZDPI-9B4E",
+    "status": "ACCEPTED",
+    "submissionId": "f1dc2914-75dd-11ea-bc55-0242ac130003",
+    "issues": []
+  },
+  "putListingsItemPreviewValid": {
+    "sku": "VALIDATION_VALID",
+    "status": "VALID",
+    "submissionId": "1edc94ea-a3d7-210b-42bc-0ec72c1384762",
+    "identifiers": [
+      {
+        "marketplaceId": "ATVPDKIKX0DER",
+        "asin": "B07N4M94X4"
+      }
+    ],
+    "issues": []
+  },
+  "putListingsItemPreviewInvalid": {
+    "sku": "VALIDATION_INVALID",
+    "status": "INVALID",
+    "submissionId": "a1c562c2-1695-11ee-be56-0242ac120002",
+    "identifiers": [],
+    "issues": [
+      {
+        "code": "90220",
+        "message": "'condition_type' is required but not supplied.",
+        "severity": "ERROR",
+        "attributeNames": [
+          "condition_type"
+        ],
+        "categories": [
+          "MISSING_ATTRIBUTE",
+          "LISTING"
+        ],
+        "enforcements": {
+          "actions": [
+            {
+              "action": "LISTING_SUPPRESSED"
+            }
+          ],
+          "exemption": {
+            "status": "NOT_EXEMPT"
+          }
+        }
+      },
+      {
+        "code": "90000900",
+        "message": "The attributes are invalid.",
+        "severity": "ERROR",
+        "attributeNames": [
+          "fake_attribute"
+        ],
+        "categories": [
+          "LISTING"
+        ]
+      }
+    ]
+  },
+  "patchListingsItemAccepted": {
+    "sku": "GM-ZDPI-9B4E",
+    "status": "ACCEPTED",
+    "submissionId": "f1dc2914-75dd-11ea-bc55-0242ac130003",
+    "issues": []
+  },
+  "patchListingsItemPreviewInvalid": {
+    "sku": "VALIDATION_INVALID",
+    "status": "INVALID",
+    "submissionId": "a1c562c2-1695-11ee-be56-0242ac120002",
+    "identifiers": [],
+    "issues": [
+      {
+        "code": "90000900",
+        "message": "The attributes are invalid.",
+        "severity": "ERROR",
+        "attributeNames": [
+          "fake_attribute"
+        ],
+        "categories": [
+          "INVALID_ATTRIBUTE",
+          "LISTING"
+        ],
+        "enforcements": {
+          "actions": [
+            {
+              "action": "ATTRIBUTE_SUPPRESSED"
+            }
+          ],
+          "exemption": {
+            "status": "NOT_EXEMPT"
+          }
+        }
+      }
+    ]
+  },
+  "deleteListingsItemAccepted": {
+    "sku": "GM-ZDPI-9B4E",
+    "status": "ACCEPTED",
+    "submissionId": "f1dc2914-75dd-11ea-bc55-0242ac130003",
+    "issues": []
+  },
+  "listingsBadRequest": {
+    "errors": [
+      {
+        "code": "BAD_REQUEST",
+        "message": "Invalid input",
+        "details": "Invalid input"
+      }
+    ]
+  },
+  "searchListingsItems": {
+    "numberOfResults": 3,
+    "pagination": {
+      "nextToken": "xsdflkj324lkjsdlkj3423klkjsdfkljlk2j34klj2l3k4jlksdjl234",
+      "previousToken": "ilkjsdflkj234lkjds234234lkjl234lksjdflkj234234lkjsfsdflkj333d"
+    },
+    "items": [
+      {
+        "sku": "GM-ZDPI-9B4E",
+        "summaries": [
+          {
+            "marketplaceId": "ATVPDKIKX0DER",
+            "asin": "B071VG5N9D",
+            "productType": "LUGGAGE",
+            "conditionType": "new_new",
+            "status": [
+              "BUYABLE"
+            ],
+            "itemName": "Hardside Carry-On Spinner Suitcase Luggage",
+            "createdDate": "2021-02-01T00:00:00Z",
+            "lastUpdatedDate": "2021-03-01T00:00:00Z",
+            "mainImage": {
+              "link": "https://www.example.com/luggage.png",
+              "height": 500,
+              "width": 500
+            }
+          },
+          {
+            "marketplaceId": "A2EUQ1WTGCTBG2",
+            "asin": "B071VG5N9D",
+            "productType": "LUGGAGE",
+            "conditionType": "new_new",
+            "status": [],
+            "itemName": "Hardside Carry-On Spinner Suitcase Luggage",
+            "createdDate": "2021-02-02T01:00:00Z",
+            "lastUpdatedDate": "2021-03-05T00:00:00Z",
+            "mainImage": {
+              "link": "https://www.example.com/luggage.png",
+              "height": 500,
+              "width": 500
+            }
+          }
+        ],
+        "offers": [
+          {
+            "marketplaceId": "ATVPDKIKX0DER",
+            "offerType": "B2C",
+            "price": {
+              "currencyCode": "USD",
+              "amount": "100.00"
+            },
+            "replenishmentDiscount": {
+              "discountPercentage": 5
+            },
+            "quantityDiscountPlan": {
+              "discountType": "PERCENT",
+              "levels": [
+                {
+                  "lowerBound": 5,
+                  "value": "5.0"
+                },
+                {
+                  "lowerBound": 10,
+                  "value": "10.0"
+                },
+                {
+                  "lowerBound": 25,
+                  "value": "15.0"
+                }
+              ]
+            }
+          },
+          {
+            "marketplaceId": "A2EUQ1WTGCTBG2",
+            "offerType": "B2C",
+            "price": {
+              "currencyCode": "CAD",
+              "amount": "130.00"
+            }
+          }
+        ],
+        "fulfillmentAvailability": [
+          {
+            "fulfillmentChannelCode": "DEFAULT",
+            "quantity": 100
+          }
+        ],
+        "issues": [
+          {
+            "code": "90220",
+            "message": "'size' is required but not supplied.",
+            "severity": "ERROR",
+            "attributeNames": [
+              "size"
+            ],
+            "categories": [
+              "MISSING_ATTRIBUTE",
+              "LISTING"
+            ],
+            "marketplaceIds": [
+              "ATVPDKIKX0DER"
+            ]
+          },
+          {
+            "code": "18027",
+            "message": "We believe the main image has text, logo, graphic, or watermark that is not permitted for this product type. Submit a compliant image to lift the suppression. Also refer to Product image requirements.",
+            "severity": "ERROR",
+            "categories": [
+              "INVALID_IMAGE",
+              "LISTING"
+            ],
+            "enforcements": {
+              "actions": [
+                {
+                  "action": "SEARCH_SUPPRESSED"
+                }
+              ],
+              "exemption": {
+                "status": "EXEMPT_UNTIL_EXPIRY_DATE",
+                "expiryDate": "2025-05-28T00:36:48.914Z"
+              }
+            },
+            "marketplaceIds": [
+              "ATVPDKIKX0DER",
+              "A2EUQ1WTGCTBG2"
+            ]
+          },
+          {
+            "code": "99300",
+            "message": "Product Detail Page Rules Violation (Inaccurate information on product detail page).",
+            "severity": "ERROR",
+            "categories": [
+              "PRODUCT"
+            ],
+            "enforcements": {
+              "actions": [
+                {
+                  "action": "ATTRIBUTE_SUPPRESSED"
+                }
+              ],
+              "exemption": {
+                "status": "EXEMPT"
+              }
+            },
+            "marketplaceIds": [
+              "ATVPDKIKX0DER",
+              "A2EUQ1WTGCTBG2"
+            ]
+          },
+          {
+            "code": "18155",
+            "message": "The 'minimum price' is greater than the selling price (excluding shipping) for the listing. Review and update your price and/or minimum price.",
+            "severity": "ERROR",
+            "categories": [
+              "INVALID_PRICE",
+              "LISTING"
+            ],
+            "enforcements": {
+              "actions": [
+                {
+                  "action": "LISTING_SUPPRESSED"
+                }
+              ],
+              "exemption": {
+                "status": "NOT_EXEMPT"
+              }
+            },
+            "marketplaceIds": [
+              "ATVPDKIKX0DER"
+            ]
+          },
+          {
+            "code": "18742",
+            "message": "Restricted Products Policy Violation",
+            "severity": "ERROR",
+            "categories": [
+              "PRODUCT"
+            ],
+            "enforcements": {
+              "actions": [
+                {
+                  "action": "CATALOG_ITEM_REMOVED"
+                }
+              ],
+              "exemption": {
+                "status": "NOT_EXEMPT"
+              }
+            },
+            "marketplaceIds": [
+              "ATVPDKIKX0DER"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "searchOrders": {
+    "orders": [
+      {
+        "orderId": "250-1234567-8901234",
+        "orderAliases": [
+          {
+            "aliasId": "JP-ORDER-2024-001",
+            "aliasType": "SELLER_ORDER_ID"
+          }
+        ],
+        "createdTime": "2024-12-25T02:30:00Z",
+        "lastUpdatedTime": "2024-12-25T06:45:00Z",
+        "programs": [
+          "PRIME"
+        ],
+        "associatedOrders": [],
+        "salesChannel": {
+          "channelName": "AMAZON",
+          "marketplaceId": "A1VC38T7YXB528",
+          "marketplaceName": "Amazon.co.jp"
+        },
+        "buyer": {
+          "buyerName": "John Smith",
+          "buyerEmail": "buyer-email@marketplace.amazon.co.jp"
+        },
+        "recipient": {
+          "deliveryAddress": {
+            "name": "John Smith",
+            "addressLine1": "123 Business Park",
+            "addressLine2": "Suite 456",
+            "city": "Tokyo",
+            "postalCode": "150-0002",
+            "countryCode": "JP",
+            "addressType": "RESIDENTIAL"
+          }
+        },
+        "proceeds": {
+          "grandTotal": {
+            "amount": "19940",
+            "currencyCode": "JPY"
+          }
+        },
+        "fulfillment": {
+          "fulfillmentStatus": "SHIPPED",
+          "fulfilledBy": "AMAZON",
+          "fulfillmentServiceLevel": "STANDARD",
+          "shipByWindow": {
+            "earliestDateTime": "2024-12-25T00:00:00Z",
+            "latestDateTime": "2024-12-25T23:59:59Z"
+          }
+        },
+        "orderItems": [
+          {
+            "orderItemId": "25012345678901",
+            "quantityOrdered": 1,
+            "programs": [
+              "TRANSPARENCY"
+            ],
+            "product": {
+              "asin": "B08C1W5N87",
+              "title": "Echo Dot (第4世代) スマートスピーカー with Alexa チャコール",
+              "sellerSku": "ECHO-DOT-4-JP-CHARCOAL",
+              "condition": {
+                "conditionType": "NEW",
+                "conditionSubtype": "NEW",
+                "conditionNote": ""
+              },
+              "price": {
+                "unitPrice": {
+                  "amount": "5980",
+                  "currencyCode": "JPY"
+                }
+              },
+              "serialNumbers": [
+                "ED4JP-2024-ABC123456789"
+              ]
+            },
+            "proceeds": {
+              "proceedsTotal": {
+                "amount": "5980",
+                "currencyCode": "JPY"
+              },
+              "breakdowns": [
+                {
+                  "type": "ITEM",
+                  "subtotal": {
+                    "amount": "5980",
+                    "currencyCode": "JPY"
+                  }
+                }
+              ]
+            },
+            "expense": {
+              "pointsCost": {
+                "pointsGranted": {
+                  "pointsNumber": 60,
+                  "pointsMonetaryValue": {
+                    "amount": "60",
+                    "currencyCode": "JPY"
+                  }
+                }
+              }
+            },
+            "promotion": {
+              "breakdowns": [
+                {
+                  "promotionId": "JP-WINTER-SALE-2024"
+                }
+              ]
+            },
+            "fulfillment": {
+              "quantityFulfilled": 1,
+              "quantityUnfulfilled": 0
+            }
+          },
+          {
+            "orderItemId": "25012345678902",
+            "quantityOrdered": 2,
+            "product": {
+              "asin": "B07PFFMP9P",
+              "title": "Fire TV Stick 4K Max ストリーミングデバイス",
+              "sellerSku": "FIRE-TV-4K-MAX-JP",
+              "condition": {
+                "conditionType": "NEW",
+                "conditionSubtype": "NEW",
+                "conditionNote": ""
+              },
+              "price": {
+                "unitPrice": {
+                  "amount": "6980",
+                  "currencyCode": "JPY"
+                }
+              },
+              "serialNumbers": [
+                "FTV4KMAXJP-2024-GHI123456789",
+                "FTV4KMAXJP-2024-JKL987654321"
+              ]
+            },
+            "proceeds": {
+              "proceedsTotal": {
+                "amount": "13960",
+                "currencyCode": "JPY"
+              },
+              "breakdowns": [
+                {
+                  "type": "ITEM",
+                  "subtotal": {
+                    "amount": "13960",
+                    "currencyCode": "JPY"
+                  }
+                }
+              ]
+            },
+            "expense": {
+              "pointsCost": {
+                "pointsGranted": {
+                  "pointsNumber": 140,
+                  "pointsMonetaryValue": {
+                    "amount": "140",
+                    "currencyCode": "JPY"
+                  }
+                }
+              }
+            },
+            "fulfillment": {
+              "quantityFulfilled": 2,
+              "quantityUnfulfilled": 0
+            }
+          }
+        ]
+      }
+    ],
+    "pagination": {
+      "nextToken": "2YgYW55IGNhcm5hbCBwbGVhc3VyZS4"
+    },
+    "createdBefore": "2024-12-25T03:00:00Z"
+  },
+  "listTransactions": {
+    "payload": {
+      "nextToken": "Next token value",
+      "transactions": [
+        {
+          "sellingPartnerMetadata": {
+            "sellingPartnerId": "A3TH9S8BH6GOGM",
+            "accountType": "PAYABLE",
+            "marketplaceId": "ATIV93840DER"
+          },
+          "relatedIdentifiers": [
+            {
+              "relatedIdentifierName": "FINANCIAL_EVENT_GROUP_ID",
+              "relatedIdentifierValue": "4MVaHcsAfaYAlwlaPWrXJxrfUiKfYZ2ooWtY7528FUA"
+            },
+            {
+              "relatedIdentifierName": "ORDER_ID",
+              "relatedIdentifierValue": "8129762527551"
+            }
+          ],
+          "transactionType": "Shipment",
+          "postedDate": "2020-07-14T03:35:13.214Z",
+          "totalAmount": {
+            "currencyAmount": 10,
+            "currencyCode": "USD"
+          }
+        }
+      ]
+    }
+  },
+  "listFinancialEventGroups": {
+    "payload": {
+      "NextToken": "3493805734095308457308475",
+      "FinancialEventGroupList": [
+        {
+          "FinancialEventGroupId": "1",
+          "ProcessingStatus": "PROCESSED",
+          "FundTransferStatus": "TRANSFERED",
+          "OriginalTotal": {
+            "CurrencyCode": "USD",
+            "CurrencyAmount": 10.34
+          },
+          "ConvertedTotal": {
+            "CurrencyCode": "USD",
+            "CurrencyAmount": 39.43
+          },
+          "FundTransferDate": "2020-02-07T14:38:42.128Z",
+          "TraceId": "34550454504545",
+          "AccountTail": "4854564857",
+          "BeginningBalance": {
+            "CurrencyCode": "USD",
+            "CurrencyAmount": 55.33
+          },
+          "FinancialEventGroupStart": "2020-02-07T14:38:42.128Z",
+          "FinancialEventGroupEnd": "2020-02-07T14:38:42.128Z"
+        }
+      ]
+    }
+  },
+  "searchDefinitionsProductTypes": {
+    "productTypes": [
+      {
+        "name": "LUGGAGE",
+        "displayName": "Luggage",
+        "marketplaceIds": [
+          "ATVPDKIKX0DER"
+        ]
+      }
+    ],
+    "productTypeVersion": "UHqSqmb4FNUk="
+  },
+  "getDefinitionsProductType": {
+    "metaSchema": {
+      "link": {
+        "resource": "https://meta-schema-url",
+        "verb": "GET"
+      },
+      "checksum": "c7af9479ca7261645cea9db56c5f720d"
+    },
+    "schema": {
+      "link": {
+        "resource": "https://schema-url",
+        "verb": "GET"
+      },
+      "checksum": "c7af9479ca7261645cea9db56c5f720d"
+    },
+    "requirements": "LISTING",
+    "requirementsEnforced": "ENFORCED",
+    "propertyGroups": {
+      "product_identity": {
+        "title": "Product Identity",
+        "description": "Information to uniquely identify your product (e.g., UPC, EAN, GTIN, Product Type, Brand)",
+        "propertyNames": [
+          "item_name",
+          "brand",
+          "external_product_id",
+          "gtin_exemption_reason",
+          "merchant_suggested_asin",
+          "product_type",
+          "product_category",
+          "product_subcategory",
+          "item_type_keyword"
+        ]
+      }
+    },
+    "locale": "en_US",
+    "marketplaceIds": [
+      "ATVPDKIKX0DER"
+    ],
+    "productType": "LUGGAGE",
+    "displayName": "Luggage",
+    "productTypeVersion": {
+      "version": "UHqSqmb4FNUk=",
+      "latest": true,
+      "releaseCandidate": false
+    }
+  }
+}

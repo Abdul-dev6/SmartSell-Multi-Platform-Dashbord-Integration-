@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { GoPlus } from "react-icons/go";
 import Card from "@/components/public/PricingCard";
 import Link from "next/link";
+import ComingSoonBadge from "@/components/public/ComingSoonBadge";
 export default function Pricing() {
   const [openIndex, setOpenIndex] = useState(null);
 
@@ -68,19 +69,17 @@ export default function Pricing() {
         "Yes. Upgrade or downgrade your subscription anytime from your dashboard.",
     },
     {
-      title: "What payment methods do you accept?",
-      description:
-        "We accept Visa, Mastercard, American Express, Stripe, and PayPal.",
-    },
-    {
       title: "Which marketplaces can I connect?",
-      description:
-        "Amazon, Walmart, Shopify, eBay, Etsy, WooCommerce and many more.",
+      description: (
+        <>
+          Shopify and eBay today. Amazon <ComingSoonBadge /> is on the way.
+        </>
+      ),
     },
     {
-      title: "Can I publish products everywhere?",
+      title: "Can I list products on more than one marketplace?",
       description:
-        "Yes. Create one listing and publish it across multiple marketplaces.",
+        "Yes. You can create and edit Shopify products and eBay listings from SmartSell. Each marketplace's listing is created separately; publishing one listing to several marketplaces at once is not available yet.",
     },
     {
       title: "How does profit tracking work?",
@@ -110,11 +109,11 @@ export default function Pricing() {
 
         <p className="max-w-3xl mx-auto text-center mt-6 text-lg text-gray-600 leading-8">
           Plans crafted to boost your profits, streamline operations, and
-          maximize performance across every marketplace.
+          maximize performance across your Shopify and eBay stores.
         </p>
 
         <p className="text-center mt-12 text-indigo-600 font-semibold">
-          Trusted by leading e-commerce brands worldwide
+          Built for Shopify and eBay sellers
         </p>
       </motion.section>
 
@@ -151,27 +150,27 @@ export default function Pricing() {
       >
         <div className="max-w-6xl mx-auto px-6">
           <h2 className="text-3xl font-bold text-center text-gray-800">
-            Trusted by Sellers Worldwide
+            Built for Multichannel Sellers
           </h2>
 
           <p className="text-center mt-5 text-gray-600">
-            Helping businesses grow across every marketplace.
+            What SmartSell does for your stores today.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 mt-14 text-center">
             <div>
-              <h1 className="text-5xl font-bold text-slate-800">$5B+</h1>
-              <p className="mt-3 text-gray-600">Monthly Amazon GMV</p>
+              <h1 className="text-5xl font-bold text-slate-800">2</h1>
+              <p className="mt-3 text-gray-600">Live marketplaces: Shopify and eBay</p>
             </div>
 
             <div>
-              <h1 className="text-5xl font-bold text-slate-800">4.5M+</h1>
-              <p className="mt-3 text-gray-600">Active Users</p>
+              <h1 className="text-5xl font-bold text-slate-800">1</h1>
+              <p className="mt-3 text-gray-600">Dashboard for listings, stock and profit</p>
             </div>
 
             <div>
-              <h1 className="text-5xl font-bold text-slate-800">24/7</h1>
-              <p className="mt-3 text-gray-600">Customer Support</p>
+              <h1 className="text-5xl font-bold text-slate-800">OAuth</h1>
+              <p className="mt-3 text-gray-600">Secure marketplace sign-in</p>
             </div>
           </div>
         </div>

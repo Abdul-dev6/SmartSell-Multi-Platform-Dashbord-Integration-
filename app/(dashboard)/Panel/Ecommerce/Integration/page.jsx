@@ -5,6 +5,8 @@ import Image from "next/image";
 import IntegrationCard from "@/components/dashboard/integrations/IntegrationCard";
 import StoreHealth from "@/components/dashboard/integrations/StoreHealth";
 import EbayPanel from "@/components/dashboard/integrations/EbayPanel";
+import AmazonPanel from "@/components/dashboard/integrations/AmazonPanel";
+import useApiData from "@/components/dashboard/shared/useApiData";
 import { useSearchParams } from "next/navigation";
 
 const ERROR_MESSAGES = {
@@ -23,16 +25,36 @@ const ERROR_MESSAGES = {
   ebay_connection_failed: "Could not connect to eBay. Please try again.",
 };
 
+// ?amazon_error= codes from /api/amazon/login and /api/amazon/callback.
+const AMAZON_ERROR_MESSAGES = {
+  authorization_declined: "Amazon access was not granted. Connect again and confirm on Seller Central.",
+  missing_code: "Amazon did not return an authorization code. Please try again.",
+  invalid_request: "Amazon returned an incomplete response. Please try again.",
+  invalid_state: "The Amazon connection request expired or was not started here. Please try again.",
+  session_required: "Sign in to SmartSell, then connect Amazon again.",
+  sign_in_required: "Sign in to SmartSell first, then use Connect Amazon on this page.",
+  token_exchange_failed: "Amazon could not complete the authorization. Please try again.",
+  verification_failed: "The Amazon authorization could not read your marketplaces. Please try again.",
+  no_supported_marketplace: "This Amazon seller account has no North America marketplace, which SmartSell supports.",
+  linked_elsewhere: "This Amazon seller account is already linked to another SmartSell account.",
+  connect_failed: "Could not connect to Amazon. Please try again.",
+  rate_limited: "Too many Amazon connection attempts. Wait a few minutes and try again.",
+};
+
 const SUCCESS_MESSAGES = {
   shopify: "Shopify store connected successfully!",
   ebay: "eBay account connected successfully! Check its listing setup below.",
+  amazon: "Amazon seller account connected! SmartSell is importing your Amazon data.",
   already: "This Shopify store is already connected.",
 };
 
 function IntegrationContent() {
   const searchParams = useSearchParams();
-  const connected = searchParams.get("connected");
+  const connected = searchParams.get("connected") || (searchParams.get("amazon") === "connected" ? "amazon" : null);
   const errorCode = searchParams.get("error");
+  const amazonErrorCode = searchParams.get("amazon_error");
+  const amazon = useApiData("/api/amazon/status");
+  const amazonStatus = amazon.body;
   const [showShopifyModal, setShowShopifyModal] = useState(false);
   const [showEbayModal, setShowEbayModal] = useState(false);
   const [showAuthorizeForm, setShowAuthorizeForm] = useState(false);
@@ -42,7 +64,11 @@ function IntegrationContent() {
   const [registeringWebhooks, setRegisteringWebhooks] = useState(false);
   const [storeDomain, setStoreDomain] = useState("");
   const [errorMessage, setErrorMessage] = useState(
-    errorCode ? ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.connection_failed : "",
+    amazonErrorCode
+      ? AMAZON_ERROR_MESSAGES[amazonErrorCode] || AMAZON_ERROR_MESSAGES.connect_failed
+      : errorCode
+        ? ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.connection_failed
+        : "",
   );
   const [successMessage, setSuccessMessage] = useState(
     SUCCESS_MESSAGES[connected] || "",
@@ -139,8 +165,13 @@ function IntegrationContent() {
     {
       Image: "/amazonsvg.png",
       title: "Amazon",
-      buttonurl: "",
-      subtitle: "World’s largest marketplace. Millions of shoppers.",
+      // Coming soon until production connections are enabled
+      // (AMAZON_CONNECT_ENABLED=true and the OAuth settings are complete).
+      comingSoon: !amazonStatus?.connectEnabled,
+      isAmazon: true,
+      subtitle: amazonStatus?.connectEnabled
+        ? "Connect your Amazon seller account (North America): listings, prices, inventory, orders and finances."
+        : "Amazon support is in development.",
     },
     {
       Image: "/shopify.png",
@@ -157,14 +188,14 @@ function IntegrationContent() {
     {
       Image: "/etsy.png",
       title: "Etsy",
-      buttonurl: "",
-      subtitle: "Unlock smarter selling by connecting your Etsy store",
+      comingSoon: true,
+      subtitle: "Etsy support is planned.",
     },
     {
       Image: "/walmart.jpg",
       title: "Walmart",
-      buttonurl: "",
-      subtitle: "Connect Walmart and scale your retail business effortlessly",
+      comingSoon: true,
+      subtitle: "Walmart support is planned.",
     },
   ];
 
@@ -300,6 +331,8 @@ function IntegrationContent() {
 
       {activeStores.length > 0 && <StoreHealth />}
 
+      <AmazonPanel status={amazonStatus} onChanged={amazon.reload} onSuccess={setSuccessMessage} onError={setErrorMessage} />
+
       <EbayPanel
         open={showEbayModal}
         onClose={closeEbayModal}
@@ -315,8 +348,9 @@ function IntegrationContent() {
             img={item.Image}
             title={item.title}
             subtitle={item.subtitle}
+            comingSoon={item.comingSoon}
             buttonurl={item.buttonurl || "#"}
-            onConnect={item.isShopify ? openShopifyModal : item.isEbay ? openEbayModal : null}
+            onConnect={item.isShopify ? openShopifyModal : item.isEbay ? openEbayModal : item.isAmazon ? () => window.location.assign("/api/amazon/connect") : null}
           />
         ))}
       </div>

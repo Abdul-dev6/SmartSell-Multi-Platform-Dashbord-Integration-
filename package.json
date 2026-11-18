@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "migrate:stage4": "node --env-file=.env scripts/migrations/stage4-indexes.mjs"
+    "migrate:stage4": "node --env-file=.env scripts/migrations/stage4-indexes.mjs",
+    "amazon:sandbox-check": "vitest run --config vitest.amazon-sandbox.config.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

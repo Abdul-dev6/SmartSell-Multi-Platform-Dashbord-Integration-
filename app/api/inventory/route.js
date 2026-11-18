@@ -8,12 +8,16 @@ import {
 } from "@/lib/catalog";
 import { getConnectedEbayAccounts, toClientAccount } from "@/lib/ebay/accounts";
 import { getEbayProductsNeedingAttention, getEbayRows } from "@/lib/ebay/catalog";
+import { getAmazonSandboxAccounts, getAmazonSandboxRows } from "@/lib/amazon/catalog";
+import { isSandboxViewerEnabled } from "@/lib/amazon/sandboxViewer";
 import { logError } from "@/lib/observability/log";
 
 const MARKETPLACES = new Set(["all", "shopify", "ebay"]);
 
 // Product/variant/inventory rows from MongoDB for the signed-in user, from
 // every connected marketplace. ?marketplace=all|shopify|ebay narrows them.
+// ?include=amazonSandbox (Products page only) adds Amazon SANDBOX sample
+// listings, marked sample: true; never in a production build.
 export async function GET(req) {
   try {
     const { user, response } = await requireUser(req);
@@ -25,30 +29,39 @@ export async function GET(req) {
     const marketplace = MARKETPLACES.has(requested) ? requested : "all";
     const wantShopify = marketplace !== "ebay";
     const wantEbay = marketplace !== "shopify";
+    const wantAmazonSandbox = marketplace === "all" && new URL(req.url).searchParams.get("include") === "amazonSandbox" && isSandboxViewerEnabled();
 
-    const [stores, ebayAccounts] = await Promise.all([getActiveStores(user._id), getConnectedEbayAccounts(user._id)]);
+    const [stores, ebayAccounts, amazonSandboxAccounts] = await Promise.all([
+      getActiveStores(user._id),
+      getConnectedEbayAccounts(user._id),
+      wantAmazonSandbox ? getAmazonSandboxAccounts(user._id) : [],
+    ]);
     const storeIds = stores.map((s) => s._id);
 
-    const [shopify, shopifyAttention, ebay, ebayAttention] = await Promise.all([
+    const [shopify, shopifyAttention, ebay, ebayAttention, amazonSandbox] = await Promise.all([
       wantShopify && stores.length
         ? getInventoryRows(user._id, storeIds, new Map(stores.map((s) => [String(s._id), s])))
         : { rows: [], truncated: false },
       wantShopify && stores.length ? getProductsNeedingAttention(user._id, storeIds) : [],
       wantEbay ? getEbayRows(user._id, ebayAccounts) : { rows: [], truncated: false },
       wantEbay ? getEbayProductsNeedingAttention(user._id, ebayAccounts) : [],
+      wantAmazonSandbox ? getAmazonSandboxRows(user._id, amazonSandboxAccounts) : { rows: [], truncated: false },
     ]);
 
     return NextResponse.json({
       success: true,
       marketplace,
-      data: [...shopify.rows.map((row) => ({ ...row, marketplace: "shopify" })), ...ebay.rows],
-      truncated: shopify.truncated || ebay.truncated,
+      data: [...shopify.rows.map((row) => ({ ...row, marketplace: "shopify" })), ...ebay.rows, ...amazonSandbox.rows],
+      truncated: shopify.truncated || ebay.truncated || amazonSandbox.truncated,
       needsAttention: [...shopifyAttention.map((item) => ({ ...item, marketplace: "shopify" })), ...ebayAttention],
       // hasStore: a Shopify store is connected (unchanged meaning).
       hasStore: stores.length > 0,
       hasEbay: ebayAccounts.length > 0,
       hasMarketplace: stores.length > 0 || ebayAccounts.length > 0,
       sync: syncSummary(stores),
+      ...(wantAmazonSandbox
+        ? { amazonSandbox: { connected: amazonSandboxAccounts.length > 0, accountIds: amazonSandboxAccounts.map((a) => String(a._id)), listings: amazonSandbox.rows.length } }
+        : {}),
       ebaySync: ebayAccounts.map((a) => ({ accountId: String(a._id), ...toClientAccount(a).sync, username: a.username, status: a.status, setupReady: Boolean(a.setup?.ready) })),
     });
   } catch (error) {

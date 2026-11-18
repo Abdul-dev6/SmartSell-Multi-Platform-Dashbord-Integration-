@@ -105,6 +105,14 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
 
                   <div>
                     <h2 className="font-semibold">{item.title}</h2>
+                    {item.sample && (
+                      <span
+                        className="mt-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-700 ring-1 ring-inset ring-amber-200"
+                        title="Amazon SP-API Sandbox sample data, not a real listing"
+                      >
+                        Sandbox sample{item.asin ? ` · ASIN ${item.asin}` : ""}
+                      </span>
+                    )}
                     {item.variant_count > 1 && (
                       <p className="text-xs text-slate-500">{item.variant_title}</p>
                     )}
@@ -117,7 +125,11 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
               <td>
                 <span
                   className={`rounded-full px-3 py-1 text-sm ${
-                    item.marketplace === "ebay" ? "bg-amber-100 text-amber-700" : "bg-indigo-100 text-indigo-600"
+                    item.marketplace === "ebay"
+                      ? "bg-amber-100 text-amber-700"
+                      : item.marketplace === "amazon"
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-indigo-100 text-indigo-600"
                   }`}
                 >
                   {item.platform}
@@ -132,7 +144,7 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
                 {showLocation && typeof item.available === "number" && (
                   <span className="mr-2 font-semibold">{item.available}</span>
                 )}
-                <span className={showLocation ? "text-sm text-slate-500" : ""}>{StockavailabilityStatus(item.available)}</span>
+                <span className={showLocation ? "text-sm text-slate-500" : ""}>{item.sample ? "—" : StockavailabilityStatus(item.available)}</span>
               </td>
 
               <td>
@@ -166,7 +178,7 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
                     </a>
                   )}
 
-                  {item.marketplace !== "ebay" && item.shop && item.product_id && (
+                  {(item.marketplace || "shopify") === "shopify" && item.shop && item.product_id && (
                     <a
                       href={shopifyAdminUrl.product(item.shop, item.product_id)}
                       target="_blank"
@@ -178,6 +190,8 @@ export default function ProductTable({ ProductData = [], onChanged, showLocation
                       <ExternalLink size={18} aria-hidden="true" />
                     </a>
                   )}
+
+                  {item.sample && <span className="text-xs text-slate-400">Read-only sample</span>}
 
                   {item.local_id && (
                     <Link

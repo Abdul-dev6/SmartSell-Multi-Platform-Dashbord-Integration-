@@ -1,0 +1,348 @@
+{
+  "source": "amzn/selling-partner-api-models (main): x-amzn-api-sandbox static examples, copied verbatim",
+  "getMarketplaceParticipations": {
+    "model": "sellers-api-model/sellers.json",
+    "request": {
+      "parameters": {}
+    },
+    "response": {
+      "payload": [
+        {
+          "marketplace": {
+            "id": "ATVPDKIKX0DER",
+            "countryCode": "US",
+            "name": "Amazon.com",
+            "defaultCurrencyCode": "USD",
+            "defaultLanguageCode": "en_US",
+            "domainName": "www.amazon.com"
+          },
+          "storeName": "BestSellerStore",
+          "participation": {
+            "isParticipating": true,
+            "hasSuspendedListings": false
+          }
+        }
+      ]
+    }
+  },
+  "getListingsItem": {
+    "model": "listings-items-api-model/listingsItems_2021-08-01.json",
+    "request": {
+      "parameters": {
+        "body": {}
+      }
+    },
+    "response": {
+      "sku": "GM-ZDPI-9B4E",
+      "summaries": [
+        {
+          "marketplaceId": "ATVPDKIKX0DER",
+          "asin": "B071VG5N9D",
+          "productType": "LUGGAGE",
+          "conditionType": "new_new",
+          "status": [
+            "BUYABLE"
+          ],
+          "itemName": "Hardside Carry-On Spinner Suitcase Luggage",
+          "createdDate": "2021-02-01T00:00:00Z",
+          "lastUpdatedDate": "2021-03-01T00:00:00Z",
+          "mainImage": {
+            "link": "https://www.example.com/luggage.png",
+            "height": 500,
+            "width": 500
+          }
+        },
+        {
+          "marketplaceId": "A2EUQ1WTGCTBG2",
+          "asin": "B071VG5N9D",
+          "productType": "LUGGAGE",
+          "conditionType": "new_new",
+          "status": [],
+          "itemName": "Hardside Carry-On Spinner Suitcase Luggage",
+          "createdDate": "2021-02-02T01:00:00Z",
+          "lastUpdatedDate": "2021-03-05T00:00:00Z",
+          "mainImage": {
+            "link": "https://www.example.com/luggage.png",
+            "height": 500,
+            "width": 500
+          }
+        }
+      ],
+      "offers": [
+        {
+          "marketplaceId": "ATVPDKIKX0DER",
+          "offerType": "B2C",
+          "price": {
+            "currencyCode": "USD",
+            "amount": "100.00"
+          },
+          "audience": {
+            "value": "ALL",
+            "displayName": "Sell on Amazon"
+          },
+          "replenishmentDiscount": {
+            "discountPercentage": 5
+          },
+          "quantityDiscountPlan": {
+            "discountType": "PERCENT",
+            "levels": [
+              {
+                "lowerBound": 5,
+                "value": "5.0"
+              },
+              {
+                "lowerBound": 10,
+                "value": "10.0"
+              },
+              {
+                "lowerBound": 25,
+                "value": "15.0"
+              }
+            ]
+          }
+        },
+        {
+          "marketplaceId": "A2EUQ1WTGCTBG2",
+          "offerType": "B2C",
+          "price": {
+            "currencyCode": "CAD",
+            "amount": "130.00"
+          },
+          "audience": {
+            "value": "ALL",
+            "displayName": "Sell on Amazon"
+          }
+        }
+      ],
+      "fulfillmentAvailability": [
+        {
+          "fulfillmentChannelCode": "DEFAULT",
+          "quantity": 100
+        }
+      ],
+      "issues": [
+        {
+          "code": "90220",
+          "message": "'size' is required but not supplied.",
+          "severity": "ERROR",
+          "attributeNames": [
+            "size"
+          ],
+          "categories": [
+            "MISSING_ATTRIBUTE",
+            "LISTING"
+          ],
+          "marketplaceIds": [
+            "ATVPDKIKX0DER"
+          ]
+        },
+        {
+          "code": "18027",
+          "message": "We believe the main image has text, logo, graphic, or watermark that is not permitted for this product type. Submit a compliant image to lift the suppression. Also refer to Product image requirements.",
+          "severity": "ERROR",
+          "categories": [
+            "INVALID_IMAGE",
+            "LISTING"
+          ],
+          "enforcements": {
+            "actions": [
+              {
+                "action": "SEARCH_SUPPRESSED"
+              }
+            ],
+            "exemption": {
+              "status": "EXEMPT_UNTIL_EXPIRY_DATE",
+              "expiryDate": "2025-05-28T00:36:48.914Z"
+            }
+          },
+          "marketplaceIds": [
+            "ATVPDKIKX0DER",
+            "A2EUQ1WTGCTBG2"
+          ]
+        },
+        {
+          "code": "99300",
+          "message": "Product Detail Page Rules Violation (Inaccurate information on product detail page).",
+          "severity": "ERROR",
+          "categories": [
+            "PRODUCT"
+          ],
+          "enforcements": {
+            "actions": [
+              {
+                "action": "ATTRIBUTE_SUPPRESSED"
+              }
+            ],
+            "exemption": {
+              "status": "EXEMPT"
+            }
+          },
+          "marketplaceIds": [
+            "ATVPDKIKX0DER",
+            "A2EUQ1WTGCTBG2"
+          ]
+        },
+        {
+          "code": "18155",
+          "message": "The 'minimum price' is greater than the selling price (excluding shipping) for the listing. Review and update your price and/or minimum price.",
+          "severity": "ERROR",
+          "categories": [
+            "INVALID_PRICE",
+            "LISTING"
+          ],
+          "enforcements": {
+            "actions": [
+              {
+                "action": "LISTING_SUPPRESSED"
+              }
+            ],
+            "exemption": {
+              "status": "NOT_EXEMPT"
+            }
+          },
+          "marketplaceIds": [
+            "ATVPDKIKX0DER"
+          ]
+        },
+        {
+          "code": "18742",
+          "message": "Restricted Products Policy Violation",
+          "severity": "ERROR",
+          "categories": [
+            "PRODUCT"
+          ],
+          "enforcements": {
+            "actions": [
+              {
+                "action": "CATALOG_ITEM_REMOVED"
+              }
+            ],
+            "exemption": {
+              "status": "NOT_EXEMPT"
+            }
+          },
+          "marketplaceIds": [
+            "ATVPDKIKX0DER"
+          ]
+        }
+      ]
+    }
+  },
+  "ordersStaticExampleRequests": {
+    "model": "orders-api-model/orders_2026-01-01.json",
+    "searchOrders": [
+      {
+        "createdAfter": {
+          "value": "2024-12-25T00:00:00Z"
+        },
+        "marketplaceIds": {
+          "value": [
+            "A1VC38T7YXB528"
+          ]
+        },
+        "includedData": {
+          "value": [
+            "BUYER",
+            "RECIPIENT",
+            "PROCEEDS",
+            "EXPENSE",
+            "PROMOTION",
+            "CANCELLATION",
+            "FULFILLMENT",
+            "PACKAGES"
+          ]
+        }
+      },
+      {
+        "createdAfter": {
+          "value": "2024-12-23T00:00:00Z"
+        },
+        "marketplaceIds": {
+          "value": [
+            "A1F83G8C2ARO7P"
+          ]
+        },
+        "includedData": {
+          "value": [
+            "BUYER",
+            "RECIPIENT",
+            "PROCEEDS",
+            "EXPENSE",
+            "PROMOTION",
+            "CANCELLATION",
+            "FULFILLMENT",
+            "PACKAGES"
+          ]
+        },
+        "paginationToken": {
+          "value": "9ZhB4RmVyc2lvbiAxLjAgb2YgdGhl"
+        }
+      },
+      {
+        "createdAfter": {
+          "value": "2024-12-20T00:00:00Z"
+        },
+        "marketplaceIds": {
+          "value": [
+            "A2Q3Y263D00KWC"
+          ]
+        },
+        "includedData": {
+          "value": [
+            "BUYER",
+            "RECIPIENT",
+            "PROCEEDS",
+            "FULFILLMENT",
+            "TAX",
+            "PAYMENT"
+          ]
+        }
+      }
+    ],
+    "getOrder": [
+      {
+        "orderId": {
+          "value": "171-9876543-2109876"
+        },
+        "includedData": {
+          "value": [
+            "BUYER",
+            "RECIPIENT",
+            "PROCEEDS",
+            "EXPENSE",
+            "PROMOTION",
+            "CANCELLATION",
+            "FULFILLMENT",
+            "PACKAGES"
+          ]
+        }
+      },
+      {
+        "orderId": {
+          "value": "028-1234567-8901234"
+        },
+        "includedData": {
+          "value": [
+            "BUYER",
+            "RECIPIENT",
+            "PROCEEDS",
+            "FULFILLMENT",
+            "TAX"
+          ]
+        }
+      },
+      {
+        "orderId": {
+          "value": "114-9876543-1234567"
+        },
+        "includedData": {
+          "value": [
+            "RECIPIENT",
+            "PROCEEDS",
+            "FULFILLMENT"
+          ]
+        }
+      }
+    ]
+  }
+}
